@@ -1,39 +1,46 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import {
+  BinanceCoins,
+  ParibuRoot,
+  ParibuCoin,
+  CombinedCoin,
+} from "./types/Coin";
 
 function App() {
-  const [binanceCoins, setBinanceCoins] = useState<any[]>([]);
-  const [usdttry, setUsdttry] = useState<any>({});
-  const [paribusCoins, setParibuCoins] = useState<any[]>([]);
-  const [combinedArray, setCombinedArray] = useState<any[]>([]);
+  const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
+  const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
+  const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
+  const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>([]);
+  const [allCoins, setAllCoins] = useState<CombinedCoin[]>([]);
 
-  function mergeArrays(arr1: any[], arr2: any[]) {
+  function mergeArrays(
+    binanceCoins: BinanceCoins[],
+    paribuCoins: ParibuCoin[]
+  ): (CombinedCoin | undefined)[] {
     // Birinci dizideki her öğe için
 
-    if (!Array.isArray(arr1) || !Array.isArray(arr2)) return [];
+    if (!Array.isArray(binanceCoins) || !Array.isArray(paribuCoins)) return [];
 
-    const mergedArray = arr1.map((item1) => {
+    const mergedArray = binanceCoins.map((item1) => {
       // İkinci dizideki öğeleri döngüye alarak eşleştir
-      const item2 = arr2.find((item) => {
+      const item2 = paribuCoins.find((item) => {
         const d1 = item.symbol.split("_")[0];
 
         if (d1 === "USDT") return false;
         return item1.s.includes(d1);
       });
       // Eğer öğeler eşleşirse
-      if (item2) {
+      if (item2 && usdttry?.c) {
         // Yeni bir nesne oluşturarak birleştir
 
-        const data = {
+        const data: CombinedCoin = {
           symbolBinance: item1.s,
-          priceBinance: Number(item1.c) * Number(usdttry.c),
+          priceBinance: Number(item1.c) * Number(usdttry?.c),
           symbolParibu: item2.symbol,
           priceParibu: item2.last,
         };
 
-        if (Number.isNaN(data.priceBinance)) {
-          console.log(data);
-        }
         return data;
       }
     });
@@ -41,13 +48,10 @@ function App() {
     return mergedArray.filter((item) => !!item);
   }
 
-  useMemo(() => {
+  useEffect(() => {
     if (!paribusCoins.length || !binanceCoins.length || !usdttry) return;
-
     const list = mergeArrays(binanceCoins, paribusCoins);
-
     const uniqueArr: any[] = [];
-
     list.forEach((obj) => {
       if (
         !uniqueArr.some(
@@ -58,29 +62,67 @@ function App() {
       }
     });
 
-    setCombinedArray(uniqueArr);
+    setCombinedArray((prevData) => {
+      // Eski verileri kopyala
+      const newDataCopy = [...prevData];
+
+      // Yeni verileri state'e ekle
+      uniqueArr.forEach((newObj) => {
+        const existingObj = newDataCopy.find(
+          (obj) => obj.symbolBinance === newObj.symbolBinance
+        );
+        if (existingObj) {
+          // Eğer öğe zaten varsa, sadece alanları güncelle
+          Object.assign(existingObj, newObj);
+        } else {
+          // Eğer öğe yoksa, diziye ekle
+          newDataCopy.push(newObj);
+        }
+      });
+
+      return newDataCopy;
+    });
   }, [usdttry, paribusCoins, binanceCoins]);
 
+  const getParibuPrice = async () => {
+    const response = await axios.get<ParibuRoot>(
+      "https://www.paribu.com/ticker"
+    );
+
+    const bitcoinPrice = response.data;
+
+    const dataArray = Object.entries(bitcoinPrice).map(
+      ([symbol, currency]): ParibuCoin => ({
+        symbol,
+        ...currency,
+      })
+    );
+
+    setParibuCoins((prevData) => {
+      // Eski verileri kopyala
+      const newDataCopy = [...prevData];
+
+      // Yeni verileri state'e ekle
+      dataArray.forEach((newObj) => {
+        const existingObj = newDataCopy.find(
+          (obj) => obj.symbol === newObj.symbol
+        );
+        if (existingObj) {
+          // Eğer öğe zaten varsa, sadece alanları güncelle
+          Object.assign(existingObj, newObj);
+        } else {
+          // Eğer öğe yoksa, diziye ekle
+          newDataCopy.push(newObj);
+        }
+      });
+
+      return newDataCopy;
+    });
+  };
+
   useEffect(() => {
-    const getPrice = async () => {
-      axios
-        .get("https://www.paribu.com/ticker")
-        .then((response) => {
-          const bitcoinPrice = response.data;
-          const dataArray = Object.entries(bitcoinPrice).map(
-            ([symbol, data1]) => ({
-              symbol,
-              ...(data1 as any),
-            })
-          );
-          setParibuCoins(dataArray);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    };
     const interval = setInterval(() => {
-      getPrice();
+      getParibuPrice();
     }, 1000);
 
     const socket2 = new WebSocket("wss://stream.binance.com/ws");
@@ -96,9 +138,8 @@ function App() {
     };
 
     socket2.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-
-      if (!data) return;
+      if (!event.data) return;
+      const data: BinanceCoins = JSON.parse(event.data);
 
       setUsdttry(data);
     };
@@ -131,7 +172,7 @@ function App() {
   const columns = binanceCoins.length ? Object.keys(binanceCoins[0]) : [];
 
   return (
-    <div style={{ display: "flex" }}>
+    <div key={combinedArray.length} style={{ minWidth: "100%" }}>
       <table border={1}>
         <thead>
           <tr>
@@ -153,7 +194,7 @@ function App() {
             )
           )}
         </tbody>
-      </table>{" "}
+      </table>
     </div>
   );
 }

@@ -1,0 +1,35 @@
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 20px 0;
+  border-radius: 5px; /* burada border radius ekledik */
+  overflow: hidden; /* kenarları yuvarlatılmış köşelerin içeriğinin dışarı taşmasını önlemek için overflow:hidden ekledik */
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+td:first-child,
+th:first-child {
+  border-left: none;
+}
+
+td:last-child,
+th:last-child {
+  border-right: none;
+}
