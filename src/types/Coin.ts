@@ -36,6 +36,7 @@ export interface ParibuCoin {
   change: number;
   percentChange: number;
   chartData: any[];
+  allData: number[];
 }
 
 export interface Currency {
@@ -49,6 +50,7 @@ export interface Currency {
   change: number;
   percentChange: number;
   chartData: any[];
+  allData: number[];
 }
 
 export interface ParibuRoot {

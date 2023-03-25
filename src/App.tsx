@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   BinanceCoins,
@@ -6,13 +6,14 @@ import {
   ParibuCoin,
   CombinedCoin,
 } from "./types/Coin";
+import { TableRow } from "./TableRow";
 
 function App() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>([]);
-  const [allCoins, setAllCoins] = useState<CombinedCoin[]>([]);
+  const [fixedCoins, setFixedCoins] = useState<CombinedCoin[]>([]);
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
@@ -35,7 +36,7 @@ function App() {
         // Yeni bir nesne oluşturarak birleştir
 
         const data: CombinedCoin = {
-          symbolBinance: item1.s,
+          symbolBinance: item1.s.replace("USDT", "_TL"),
           priceBinance: Number(item1.c) * Number(usdttry?.c),
           symbolParibu: item2.symbol,
           priceParibu: item2.last,
@@ -48,26 +49,13 @@ function App() {
     return mergedArray.filter((item) => !!item);
   }
 
-  useEffect(() => {
-    if (!paribusCoins.length || !binanceCoins.length || !usdttry) return;
-    const list = mergeArrays(binanceCoins, paribusCoins);
-    const uniqueArr: any[] = [];
-    list.forEach((obj) => {
-      if (
-        !uniqueArr.some(
-          (uniqueObj) => uniqueObj.symbolBinance === obj?.symbolBinance
-        )
-      ) {
-        uniqueArr.push(obj);
-      }
-    });
-
+  const updatePrice = (prices: any[]) => {
     setCombinedArray((prevData) => {
       // Eski verileri kopyala
       const newDataCopy = [...prevData];
 
       // Yeni verileri state'e ekle
-      uniqueArr.forEach((newObj) => {
+      prices.forEach((newObj) => {
         const existingObj = newDataCopy.find(
           (obj) => obj.symbolBinance === newObj.symbolBinance
         );
@@ -82,6 +70,22 @@ function App() {
 
       return newDataCopy;
     });
+  };
+  useEffect(() => {
+    if (!paribusCoins.length || !binanceCoins.length || !usdttry) return;
+    const list = mergeArrays(binanceCoins, paribusCoins);
+    const uniqueArr: any[] = [];
+    list.forEach((obj) => {
+      if (
+        !uniqueArr.some(
+          (uniqueObj) => uniqueObj.symbolBinance === obj?.symbolBinance
+        )
+      ) {
+        uniqueArr.push(obj);
+      }
+
+      updatePrice(uniqueArr);
+    });
   }, [usdttry, paribusCoins, binanceCoins]);
 
   const getParibuPrice = async () => {
@@ -95,6 +99,7 @@ function App() {
       ([symbol, currency]): ParibuCoin => ({
         symbol,
         ...currency,
+        allData: [currency.last],
       })
     );
 
@@ -110,6 +115,7 @@ function App() {
         if (existingObj) {
           // Eğer öğe zaten varsa, sadece alanları güncelle
           Object.assign(existingObj, newObj);
+          existingObj.allData = [...existingObj.allData, ...newObj.allData];
         } else {
           // Eğer öğe yoksa, diziye ekle
           newDataCopy.push(newObj);
@@ -169,30 +175,39 @@ function App() {
       clearInterval(interval);
     };
   }, []);
-  const columns = binanceCoins.length ? Object.keys(binanceCoins[0]) : [];
 
   return (
-    <div key={combinedArray.length} style={{ minWidth: "100%" }}>
-      <table border={1}>
+    <div
+      key={combinedArray.length || fixedCoins.length}
+      style={{ maxWidth: "100%" }}
+    >
+      <table>
         <thead>
           <tr>
             <th>Symbol Binance</th>
             <th>Price Binance</th>
             <th>Symbol Paribu</th>
             <th>Price Paribu</th>
+            <th>Difference</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {combinedArray.map(
-            ({ symbolBinance, priceBinance, symbolParibu, priceParibu }) => (
-              <tr key={priceBinance + priceParibu}>
-                <td>{symbolBinance}</td>
-                <td>{priceBinance}</td>
-                <td>{symbolParibu}</td>
-                <td>{priceParibu}</td>
-              </tr>
-            )
-          )}
+          {combinedArray.map((item: CombinedCoin) => (
+            <TableRow
+              key={item.symbolBinance}
+              item={item}
+              onImmobilize={(item) => {
+                setFixedCoins((prev) => [...prev, item]);
+              }}
+              fixedCoins={fixedCoins}
+              onUnImmobilize={(item) => {
+                setFixedCoins((prev) => [
+                  ...prev.filter((i) => i.symbolBinance !== item.symbolBinance),
+                ]);
+              }}
+            />
+          ))}
         </tbody>
       </table>
     </div>

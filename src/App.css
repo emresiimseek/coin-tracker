@@ -6,6 +6,19 @@ table {
   overflow: hidden; /* kenarları yuvarlatılmış köşelerin içeriğinin dışarı taşmasını önlemek için overflow:hidden ekledik */
 }
 
+button {
+  display: inline-block;
+  padding: 10px 20px;
+  color: white;
+  font-size: 16px;
+  border-radius: 4px;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
 thead {
   position: sticky;
   top: 0;
