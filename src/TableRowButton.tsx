@@ -4,10 +4,12 @@ import { CombinedCoin } from "./types/Coin";
 const TableRowButton = ({
   symbolBinance,
   fixedCoins,
+  coin,
   onImmobilize,
   onUnImmobilize,
 }: {
   symbolBinance: string;
+  coin: CombinedCoin;
   fixedCoins: CombinedCoin[];
   onImmobilize: () => void;
   onUnImmobilize: () => void;
@@ -19,6 +21,17 @@ const TableRowButton = ({
 
     setFixed(f);
   }, [fixedCoins]);
+
+  const getKar = () => {
+    const anaPara = 10000;
+    const adet = anaPara / (fixed?.paribuLowestAsk ?? 0);
+    const paribuKar =
+      coin.paribuHighestBid * adet - (fixed?.paribuLowestAsk ?? 0) * adet;
+    const binanceKar = coin.priceBinance * adet;
+
+    const b3 = (fixed?.priceBinance ?? 0) * adet;
+    return paribuKar + (binanceKar - b3) * -1;
+  };
   return (
     <>
       <td>
@@ -28,9 +41,10 @@ const TableRowButton = ({
             fixed ? onUnImmobilize() : onImmobilize();
           }}
         >
-          {fixed
-            ? `Bırak (${fixed?.priceBinance - fixed.priceParibu})`
-            : "Sabitle"}
+          <div>{fixed && `Kar: ${getKar()} `}</div>
+          <div>{fixed && `Paribu: (${fixed.paribuLowestAsk})`}</div>
+          <div>{fixed && `Binance: (${fixed.priceBinance})`}</div>
+          {fixed ? "Bırak" : "Sabitle"}
         </button>
       </td>
     </>

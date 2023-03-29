@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
 import TableRowButton from "./TableRowButton";
 import { CombinedCoin } from "./types/Coin";
 
@@ -15,17 +14,25 @@ export const TableRow = ({
 }) => {
   return (
     <>
-      <tr key={item.priceBinance + item.priceParibu}>
+      <tr
+        key={item.priceBinance}
+        style={{
+          backgroundColor: item.isBuy ? "green" : "",
+        }}
+      >
         <td>{item.symbolBinance}</td>
         <td>{item.priceBinance}</td>
         <td>{item.symbolParibu}</td>
-        <td>{item.priceParibu}</td>
-        <td>{item.priceParibu - item.priceBinance}</td>
+        <td>{item.paribuHighestBid}</td>
+        <td>{item.paribuLowestAsk}</td>
+        <td>{item.buyDiff}%</td>
+        <td>{item.sellDiff}%</td>
         <TableRowButton
           symbolBinance={item.symbolBinance}
           fixedCoins={fixedCoins}
           onImmobilize={() => onImmobilize({ ...item })}
           onUnImmobilize={() => onUnImmobilize({ ...item })}
+          coin={item}
         />
       </tr>
     </>

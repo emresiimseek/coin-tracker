@@ -61,5 +61,9 @@ export interface CombinedCoin {
   symbolBinance: string;
   priceBinance: number;
   symbolParibu: string;
-  priceParibu: number;
+  paribuLowestAsk: number;
+  paribuHighestBid: number;
+  isBuy: boolean;
+  sellDiff: number;
+  buyDiff: number;
 }
