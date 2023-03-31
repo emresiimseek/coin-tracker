@@ -22,6 +22,7 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
       password === process.env.REACT_APP_PASSWORD
     ) {
       console.log("Başarılı");
+      sessionStorage.setItem("isLogin", "true");
       onLogin(true);
     }
   };

@@ -8,7 +8,7 @@ button {
   display: inline-block;
   padding: 5px 5px;
   color: white;
-  width: 5vw;
+  width: 100%;
   font-size: 16px;
   border-radius: 0px;
   border: none;
@@ -49,27 +49,83 @@ th:last-child {
   border-right: none;
 }
 
-@media only screen and (max-width: 600px) {
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    overflow-x: auto;
-  }
+@media only screen and (max-width: 760px),
+  (min-device-width: 768px) and (max-device-width: 1024px) {
+  /* Force table to not be like tables anymore */
+  table,
+  thead,
+  tbody,
   th,
+  td,
+  tr {
+    display: block;
+  }
+
+  /* Hide table headers (but not display: none;, for accessibility) */
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  tr {
+    border: 1px solid #ccc;
+  }
+
   td {
-    font-size: 14px;
-    padding: 10px;
+    /* Behave  like a "row" */
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-bottom: 5px;
+    padding-left: 50%;
   }
-  th:first-child,
-  td:first-child {
-    padding-left: 10px;
-  }
-  th:last-child,
-  td:last-child {
+
+  td:before {
+    /* Now like a table header */
+    position: absolute;
+    /* Top/left values mimic padding */
+    top: 6px;
+    left: 6px;
+    width: 45%;
     padding-right: 10px;
+    white-space: nowrap;
   }
-  button {
-    width: 100%; /* Butonları tam genişlik yap */
-    margin-bottom: 10px; /* Butonlar arasında boşluk bırak */
+
+  /*
+	Label the data
+	*/
+  td:nth-of-type(1):before {
+    content: "Binance Sembol";
+  }
+  td:nth-of-type(2):before {
+    content: "Binance Fiyat";
+  }
+  td:nth-of-type(3):before {
+    content: "Paribu Sembol";
+  }
+  td:nth-of-type(4):before {
+    content: "Paribu Satış";
+  }
+  td:nth-of-type(5):before {
+    content: "Paribu Alış";
+  }
+  td:nth-of-type(6):before {
+    content: "Alış Yüzde";
+  }
+  td:nth-of-type(7):before {
+    content: "Satış Yüzde";
+  }
+  td:nth-of-type(8):before {
+    content: "İşlem";
+  }
+  td:nth-of-type(9):before {
+    content: "Sabit Paribu Alış";
+  }
+  td:nth-of-type(10):before {
+    content: "Sabit Binance Fiyat";
+  }
+  td:nth-of-type(11):before {
+    content: "Kar";
   }
 }

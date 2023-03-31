@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import {
   BinanceCoins,
@@ -6,7 +6,11 @@ import {
   ParibuCoin,
   CombinedCoin,
 } from "./types/Coin";
-import { TableRow } from "./TableRow";
+import TableRow from "./TableRow";
+
+const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
+const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
+const PARIBU_API_URL = "https://www.paribu.com/ticker";
 
 function CoinTracker() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
@@ -14,6 +18,22 @@ function CoinTracker() {
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>([]);
   const [fixedCoins, setFixedCoins] = useState<CombinedCoin[]>([]);
+
+  const handleImmobilize = useCallback(
+    (item: any) => {
+      setFixedCoins((prev) => [...prev, item]);
+    },
+    [fixedCoins]
+  );
+
+  const handleUnImmobilize = useCallback(
+    (item: any) => {
+      setFixedCoins((prev) => [
+        ...prev.filter((i) => i.symbolBinance !== item.symbolBinance),
+      ]);
+    },
+    [fixedCoins]
+  );
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
@@ -95,9 +115,7 @@ function CoinTracker() {
   }, [usdttry, paribusCoins, binanceCoins]);
 
   const getParibuPrice = async () => {
-    const response = await axios.get<ParibuRoot>(
-      "https://www.paribu.com/ticker"
-    );
+    const response = await axios.get<ParibuRoot>(PARIBU_API_URL);
 
     const bitcoinPrice = response.data;
 
@@ -133,45 +151,45 @@ function CoinTracker() {
       getParibuPrice();
     }, 1000);
 
-    const socket2 = new WebSocket("wss://stream.binance.com/ws");
-    socket2.onopen = () => {
+    const binanceSocket = new WebSocket(BINANCE_WEBSOCKET_URL);
+    binanceSocket.onopen = () => {
       console.log("WebSocket connected 2");
       const request2 = {
         method: "SUBSCRIBE",
         params: ["usdttry@ticker"],
         id: 2,
       };
-      socket2.send(JSON.stringify(request2));
+      binanceSocket.send(JSON.stringify(request2));
     };
 
-    socket2.onmessage = (event) => {
+    binanceSocket.onmessage = (event) => {
       if (!event.data) return;
       const data: BinanceCoins = JSON.parse(event.data);
 
       setUsdttry(data);
     };
 
-    const socket = new WebSocket("wss://fstream.binance.com/ws");
+    const binanceFSSocket = new WebSocket(FS_BINANCE_WEBSOCKET_URL);
 
-    socket.onopen = () => {
+    binanceFSSocket.onopen = () => {
       console.log("WebSocket connected");
       const request = {
         method: "SUBSCRIBE",
         params: ["!miniTicker@arr"],
         id: 1,
       };
-      socket.send(JSON.stringify(request));
+      binanceFSSocket.send(JSON.stringify(request));
     };
 
-    socket.onmessage = (event) => {
+    binanceFSSocket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (!data) return;
 
       setBinanceCoins(data);
     };
     return () => {
-      socket.close();
-      socket2.close();
+      binanceFSSocket.close();
+      binanceSocket.close();
       clearInterval(interval);
     };
   }, []);
@@ -202,15 +220,9 @@ function CoinTracker() {
             <TableRow
               key={item.symbolBinance}
               item={item}
-              onImmobilize={(item) => {
-                setFixedCoins((prev) => [...prev, item]);
-              }}
+              onImmobilize={handleImmobilize}
               fixedCoins={fixedCoins}
-              onUnImmobilize={(item) => {
-                setFixedCoins((prev) => [
-                  ...prev.filter((i) => i.symbolBinance !== item.symbolBinance),
-                ]);
-              }}
+              onUnImmobilize={handleUnImmobilize}
             />
           ))}
         </tbody>

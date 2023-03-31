@@ -5,6 +5,11 @@ import LoginScreen from "./Login";
 function App() {
   const [isLogin, setIsLogin] = useState(false);
 
+  useEffect(() => {
+    const data = sessionStorage.getItem("isLogin");
+    setIsLogin(!!data);
+  }, []);
+
   return (
     <>
       {isLogin ? (
