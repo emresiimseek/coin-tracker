@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CombinedCoin } from "./types/Coin";
 
 export const TableRow = ({
@@ -39,6 +39,7 @@ export const TableRow = ({
         key={item.priceBinance}
         style={{
           backgroundColor: item.isBuy ? "green" : "",
+          color: item.isBuy ? "white" : "black",
         }}
       >
         <td>{item.symbolBinance}</td>

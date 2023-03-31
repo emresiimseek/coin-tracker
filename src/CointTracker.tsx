@@ -19,21 +19,15 @@ function CoinTracker() {
     binanceCoins: BinanceCoins[],
     paribuCoins: ParibuCoin[]
   ): CombinedCoin[] {
-    // Birinci dizideki her öğe için
-
     if (!Array.isArray(binanceCoins) || !Array.isArray(paribuCoins)) return [];
 
     const mergedArray = binanceCoins.map((binanceCoin) => {
-      // İkinci dizideki öğeleri döngüye alarak eşleştir
       const paribuCoin = paribuCoins.find((item) => {
         const d1 = item.symbol.split("_")[0];
 
         return binanceCoin.s.replace("USDT", "") === d1;
       });
-      // Eğer öğeler eşleşirse
       if (paribuCoin && usdttry?.c) {
-        // Yeni bir nesne oluşturarak birleştir
-
         const data: CombinedCoin = {
           symbolBinance: binanceCoin.s,
           priceBinance: Number(binanceCoin.c) * Number(usdttry?.c),
@@ -67,25 +61,20 @@ function CoinTracker() {
         return data;
       }
     });
-    // null olan tüm öğeleri filtrele
     return mergedArray.filter((item) => item) as CombinedCoin[];
   }
 
   const updatePrice = (prices: any[]) => {
     setCombinedArray((prevData) => {
-      // Eski verileri kopyala
       let newDataCopy = [...prevData];
 
-      // Yeni verileri state'e ekle
       prices.forEach((newObj) => {
         const existingObj = newDataCopy.find(
           (obj) => obj.symbolBinance === newObj.symbolBinance
         );
         if (existingObj) {
-          // Eğer öğe zaten varsa, sadece alanları güncelle
           Object.assign(existingObj, newObj);
         } else {
-          // Eğer öğe yoksa, diziye ekle
           newDataCopy.push(newObj);
         }
       });
@@ -121,20 +110,16 @@ function CoinTracker() {
     );
 
     setParibuCoins((prevData) => {
-      // Eski verileri kopyala
       const newDataCopy = [...prevData];
 
-      // Yeni verileri state'e ekle
       dataArray.forEach((newObj) => {
         const existingObj = newDataCopy.find(
           (obj) => obj.symbol === newObj.symbol
         );
         if (existingObj) {
-          // Eğer öğe zaten varsa, sadece alanları güncelle
           Object.assign(existingObj, newObj);
           existingObj.allData = [...existingObj.allData, ...newObj.allData];
         } else {
-          // Eğer öğe yoksa, diziye ekle
           newDataCopy.push(newObj);
         }
       });
@@ -151,7 +136,6 @@ function CoinTracker() {
     const socket2 = new WebSocket("wss://stream.binance.com/ws");
     socket2.onopen = () => {
       console.log("WebSocket connected 2");
-      // Tüm piyasa çiftlerinin ticker verilerini isteyin
       const request2 = {
         method: "SUBSCRIBE",
         params: ["usdttry@ticker"],
@@ -171,7 +155,6 @@ function CoinTracker() {
 
     socket.onopen = () => {
       console.log("WebSocket connected");
-      // Tüm piyasa çiftlerinin ticker verilerini isteyin
       const request = {
         method: "SUBSCRIBE",
         params: ["!miniTicker@arr"],
