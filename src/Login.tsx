@@ -30,9 +30,9 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
   return (
     <div className="login-base">
       <div className="login-container">
-        <h1>Login</h1>
+        <h2>Giriş</h2>
         <form onSubmit={handleSubmit}>
-          <label htmlFor="username">Username</label>
+          <label htmlFor="username">Kullanıcı Adı</label>
           <input
             type="text"
             id="username"
@@ -42,7 +42,7 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
             required
           />
 
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Parola</label>
           <input
             type="password"
             id="password"
@@ -52,7 +52,9 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
             required
           />
 
-          <button type="submit">Login</button>
+          <button className="login-button" type="submit">
+            Login
+          </button>
         </form>
       </div>
     </div>

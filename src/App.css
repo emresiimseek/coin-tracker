@@ -4,20 +4,19 @@ table {
   overflow: hidden; /* kenarları yuvarlatılmış köşelerin içeriğinin dışarı taşmasını önlemek için overflow:hidden ekledik */
 }
 
-button {
+button.action {
   display: inline-block;
   padding: 5px 5px;
   color: white;
   width: 100%;
   font-size: 16px;
   border-radius: 0px;
-  border: none;
   text-align: center;
   text-decoration: none;
   transition: background-color 0.3s ease;
   cursor: pointer;
-  border-left: 1px solid white;
-  border-right: 1px solid white;
+  height: fit-content;
+  border: 1px solid white;
 }
 
 thead {
@@ -33,6 +32,7 @@ th {
 td {
   text-align: center;
   border-bottom: 1px solid #ddd;
+  padding: 3px;
 }
 
 tr:hover {
@@ -51,6 +51,11 @@ th:last-child {
 
 @media only screen and (max-width: 760px),
   (min-device-width: 768px) and (max-device-width: 1024px) {
+  button.action {
+    font-weight: bold;
+    border: 2px solid white;
+    width: 100%;
+  }
   /* Force table to not be like tables anymore */
   table,
   thead,
@@ -69,7 +74,8 @@ th:last-child {
   }
 
   tr {
-    border: 1px solid #ccc;
+    border: 2px solid white;
+    font-weight: bold;
   }
 
   td {
@@ -77,8 +83,8 @@ th:last-child {
     border: none;
     border-bottom: 1px solid #eee;
     position: relative;
-    padding-bottom: 5px;
     padding-left: 50%;
+    text-align: end;
   }
 
   td:before {
@@ -90,6 +96,7 @@ th:last-child {
     width: 45%;
     padding-right: 10px;
     white-space: nowrap;
+    text-align: start;
   }
 
   /*
@@ -116,16 +123,17 @@ th:last-child {
   td:nth-of-type(7):before {
     content: "Satış Yüzde";
   }
+
   td:nth-of-type(8):before {
-    content: "İşlem";
-  }
-  td:nth-of-type(9):before {
     content: "Sabit Paribu Alış";
   }
-  td:nth-of-type(10):before {
+  td:nth-of-type(9):before {
     content: "Sabit Binance Fiyat";
   }
-  td:nth-of-type(11):before {
+  td:nth-of-type(10):before {
     content: "Kar";
+  }
+  td:nth-of-type(11):before {
+    content: "İşlem";
   }
 }

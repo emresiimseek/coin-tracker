@@ -49,8 +49,14 @@ const TableRow = ({
         <td>{item.paribuLowestAsk}</td>
         <td>{item.buyDiff}%</td>
         <td>{item.sellDiff}%</td>
+        <td style={{ borderLeft: "1px solid white" }}>
+          {fixed?.paribuLowestAsk ?? "---"}
+        </td>
+        <td>{fixed?.priceBinance ?? "---"}</td>
+        <td>{getProfit ?? "---"}</td>
         <td>
           <button
+            className="action"
             style={{ backgroundColor: fixed ? "red" : "green" }}
             onClick={() => {
               fixed ? onUnImmobilize({ ...item }) : onImmobilize({ ...item });
@@ -59,13 +65,6 @@ const TableRow = ({
             {fixed ? "Bırak" : "Sabitle"}
           </button>
         </td>
-        <td style={{ padding: fixed?.paribuLowestAsk ? 5 : 0 }}>
-          {fixed?.paribuLowestAsk}
-        </td>
-        <td style={{ padding: fixed?.priceBinance ? 5 : 0 }}>
-          {fixed?.priceBinance}
-        </td>
-        <td style={{ padding: getProfit ? 5 : 0 }}>{getProfit}</td>
       </tr>
     </>
   );
