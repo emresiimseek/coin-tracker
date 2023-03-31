@@ -208,7 +208,10 @@ function CoinTracker() {
             <th>Paribu Alış</th>
             <th>Alış Yüzde</th>
             <th>Satış Yüzde</th>
-            <th>Action</th>
+            <th>İşlem</th>
+            <th>Sabit Paribu Alış</th>
+            <th>Sabit Binance Fiyat</th>
+            <th>Kar</th>
           </tr>
         </thead>
         <tbody>

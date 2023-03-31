@@ -3,7 +3,7 @@ import CoinTracker from "./CointTracker";
 import LoginScreen from "./Login";
 
 function App() {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
 
   return (
     <>
