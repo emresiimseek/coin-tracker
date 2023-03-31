@@ -6,7 +6,8 @@ import {
   ParibuCoin,
   CombinedCoin,
 } from "./types/Coin";
-import TableRow from "./TableRow";
+import { TableRow } from "./TableRow";
+import Header from "./Header";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -18,6 +19,7 @@ function CoinTracker() {
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>([]);
   const [fixedCoins, setFixedCoins] = useState<CombinedCoin[]>([]);
+  const [principal, setPrincipal] = useState<string>("1000");
 
   const handleImmobilize = useCallback(
     (item: any) => {
@@ -194,11 +196,19 @@ function CoinTracker() {
     };
   }, []);
 
+  const handleChange = useCallback(
+    (value: number) => {
+      setPrincipal(value.toString());
+    },
+    [principal]
+  );
+
   return (
     <div
       key={combinedArray.length || fixedCoins.length}
       style={{ maxWidth: "100%" }}
     >
+      <Header principal={principal} onChange={handleChange} />
       <table>
         <thead>
           <tr>
@@ -219,6 +229,7 @@ function CoinTracker() {
           {combinedArray.map((item: CombinedCoin) => (
             <TableRow
               key={item.symbolBinance}
+              principal={+principal}
               item={item}
               onImmobilize={handleImmobilize}
               fixedCoins={fixedCoins}

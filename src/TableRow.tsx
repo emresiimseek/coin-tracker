@@ -1,16 +1,18 @@
-import { memo, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { CombinedCoin } from "./types/Coin";
 
-const TableRow = ({
+export const TableRow = ({
   item,
   fixedCoins,
   onImmobilize,
   onUnImmobilize,
+  principal,
 }: {
   item: CombinedCoin;
   fixedCoins: CombinedCoin[];
   onImmobilize: (item: CombinedCoin) => void;
   onUnImmobilize: (item: CombinedCoin) => void;
+  principal: number;
 }) => {
   const [fixed, setFixed] = useState<CombinedCoin>();
 
@@ -20,18 +22,17 @@ const TableRow = ({
     setFixed(f);
   }, [fixedCoins]);
 
-  const getProfit = useMemo(() => {
+  const getProfit = () => {
     if (!fixed) return null;
 
-    const anaPara = 10000;
-    const adet = anaPara / (fixed?.paribuLowestAsk ?? 0);
-    const paribuKar =
-      item.paribuHighestBid * adet - (fixed?.paribuLowestAsk ?? 0) * adet;
-    const binanceKar = item.priceBinance * adet;
+    const count = principal / (fixed?.paribuLowestAsk ?? 0);
+    const paribuProfit =
+      item.paribuHighestBid * count - (fixed?.paribuLowestAsk ?? 0) * count;
+    const binanceProfit = item.priceBinance * count;
 
-    const b3 = (fixed?.priceBinance ?? 0) * adet;
-    return paribuKar + (binanceKar - b3) * -1;
-  }, [fixed, item]);
+    const b3 = (fixed?.priceBinance ?? 0) * count;
+    return paribuProfit + (binanceProfit - b3) * -1;
+  };
 
   return (
     <>
@@ -53,7 +54,7 @@ const TableRow = ({
           {fixed?.paribuLowestAsk ?? "---"}
         </td>
         <td>{fixed?.priceBinance ?? "---"}</td>
-        <td>{getProfit ?? "---"}</td>
+        <td>{getProfit() ?? "---"}</td>
         <td>
           <button
             className="action"
@@ -69,5 +70,3 @@ const TableRow = ({
     </>
   );
 };
-
-export default memo(TableRow);
