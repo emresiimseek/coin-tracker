@@ -24,7 +24,7 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
       console.log("Başarılı");
       sessionStorage.setItem("isLogin", "true");
       onLogin(true);
-    }
+    } else alert("Kullanıcı adı veya şifre yanlış.");
   };
 
   return (
