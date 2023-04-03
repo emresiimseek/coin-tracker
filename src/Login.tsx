@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import "./Login.css";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 
 function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
   const [username, setUsername] = useState("");
@@ -32,29 +34,35 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
       <div className="login-container">
         <h2>Giriş</h2>
         <form onSubmit={handleSubmit}>
-          <label htmlFor="username">Kullanıcı Adı</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
+          <TextField
+            id="outlined-basic"
+            label="Kullanıcı Adı"
+            variant="outlined"
             value={username}
             onChange={handleUsernameChange}
-            required
+            type="text"
+            style={{ marginBottom: 10 }}
+            size="small"
           />
 
-          <label htmlFor="password">Parola</label>
-          <input
+          <TextField
+            id="outlined-basic"
+            label="Parola"
+            variant="outlined"
             type="password"
-            id="password"
-            name="password"
             value={password}
             onChange={handlePasswordChange}
-            required
+            size="small"
           />
 
-          <button className="login-button" type="submit">
-            Login
-          </button>
+          <Button
+            type="submit"
+            variant="outlined"
+            color="success"
+            style={{ marginTop: 10 }}
+          >
+            Giriş
+          </Button>
         </form>
       </div>
     </div>

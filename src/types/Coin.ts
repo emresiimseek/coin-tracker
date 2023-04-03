@@ -65,5 +65,10 @@ export interface CombinedCoin {
   paribuHighestBid: number;
   isBuy: boolean;
   sellDiff: number;
+  id: string;
   buyDiff: number;
+  fixedParibuLowestAsk?: number | null;
+  fixedParibuHighestBid?: number | null;
+  fixedBinancePrice?: number | null;
+  benefit?: number | null;
 }
