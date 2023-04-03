@@ -21,7 +21,7 @@ function CoinTracker() {
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
   const [isMockData, setIsMockData] = useState<boolean>(false);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
-    isMockData ? defaultArray : []
+    isMockData ? [] : []
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [principal, setPrincipal] = useState<string>("1000");
@@ -39,6 +39,29 @@ function CoinTracker() {
         return binanceCoin.s.replace("USDT", "") === d1;
       });
       if (paribuCoin && usdttry?.c) {
+        const buyDiff = Number(
+          (
+            ((paribuCoin.lowestAsk -
+              Number(binanceCoin.c) * Number(usdttry?.c)) *
+              100) /
+            paribuCoin.lowestAsk
+          ).toFixed(3)
+        );
+
+        const isBuy =
+          ((paribuCoin.lowestAsk - Number(binanceCoin.c) * Number(usdttry?.c)) *
+            100) /
+            paribuCoin.lowestAsk <
+          -0.1;
+
+        const sellDiff = Number(
+          (
+            ((Number(binanceCoin.c) * Number(usdttry?.c) -
+              paribuCoin.highestBid) *
+              100) /
+            (Number(binanceCoin.c) * Number(usdttry?.c))
+          ).toFixed(3)
+        );
         const data: CombinedCoin = {
           symbolBinance: binanceCoin.s,
           priceBinance: Number(binanceCoin.c) * Number(usdttry?.c),
@@ -46,28 +69,13 @@ function CoinTracker() {
           paribuHighestBid: paribuCoin.highestBid,
           paribuLowestAsk: paribuCoin.lowestAsk,
           id: binanceCoin.s + paribuCoin.symbol,
-          isBuy:
-            ((paribuCoin.lowestAsk -
-              Number(binanceCoin.c) * Number(usdttry?.c)) *
-              100) /
-              paribuCoin.lowestAsk <
-            -0.1,
-          buyDiff: Number(
-            (
-              ((paribuCoin.lowestAsk -
-                Number(binanceCoin.c) * Number(usdttry?.c)) *
-                100) /
-              paribuCoin.lowestAsk
-            ).toFixed(3)
-          ),
-          sellDiff: Number(
-            (
-              ((Number(binanceCoin.c) * Number(usdttry?.c) -
-                paribuCoin.highestBid) *
-                100) /
-              (Number(binanceCoin.c) * Number(usdttry?.c))
-            ).toFixed(3)
-          ),
+          buyDiff,
+          isBuy,
+          sellDiff,
+          paribuDiff:
+            ((paribuCoin.highestBid - paribuCoin.lowestAsk) /
+              paribuCoin.highestBid) *
+            100,
         };
 
         return data;
@@ -77,8 +85,6 @@ function CoinTracker() {
   }
 
   const updatePrice = (prices: any[]) => {
-    console.log(prices);
-
     setCombinedArray((prevData) => {
       let newDataCopy = [...prevData];
 
@@ -117,7 +123,6 @@ function CoinTracker() {
         ...newDataCopy.filter((x) => x.isBuy),
         ...newDataCopy.filter((x) => !x.isBuy),
       ];
-      console.log(data1);
 
       return [
         ...newDataCopy.filter((x) => x.isBuy),
@@ -161,8 +166,6 @@ function CoinTracker() {
           newDataCopy.push(newObj);
         }
       });
-
-      console.log(newDataCopy);
 
       return newDataCopy;
     });
@@ -249,6 +252,12 @@ function CoinTracker() {
       flex: 1,
       type: "number",
     },
+    {
+      field: "paribuDiff",
+      headerName: "Paribu Makas",
+      flex: 1,
+      type: "number",
+    },
     { field: "isBuy", headerName: "Satın Al", flex: 1, type: "boolean" },
     {
       field: "fixedParibuLowestAsk",
@@ -262,6 +271,7 @@ function CoinTracker() {
       flex: 1,
       type: "number",
     },
+
     {
       field: "fixedBinancePrice",
       headerName: "Sabit Binance Fiyat",

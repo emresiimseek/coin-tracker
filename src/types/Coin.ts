@@ -71,4 +71,5 @@ export interface CombinedCoin {
   fixedParibuHighestBid?: number | null;
   fixedBinancePrice?: number | null;
   benefit?: number | null;
+  paribuDiff: number;
 }
