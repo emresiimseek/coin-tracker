@@ -305,19 +305,6 @@ function CoinTracker() {
         getRowClassName={(value) => {
           return value.row.isBuy ? "buy" : "";
         }}
-        sx={{
-          ".MuiDataGrid-row": {
-            "&:hover": {
-              backgroundColor: "hsl(120, 76%, 59%)",
-            },
-          },
-          ".MuiDataGrid-row.Mui-selected": {
-            backgroundColor: "none",
-            "&:hover": {
-              backgroundColor: "#3a9fbf",
-            },
-          },
-        }}
       />
     </div>
   );
