@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
+
 import {
   BinanceCoins,
   ParibuRoot,
   ParibuCoin,
   CombinedCoin,
 } from "./types/Coin";
+import { defaultArray } from "./defaultArray";
+import { TextField } from "@mui/material";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -16,7 +19,10 @@ function CoinTracker() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
-  const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>([]);
+  const [isMockData, setIsMockData] = useState<boolean>(false);
+  const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
+    isMockData ? defaultArray : []
+  );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [principal, setPrincipal] = useState<string>("1000");
 
@@ -57,7 +63,7 @@ function CoinTracker() {
           sellDiff: Number(
             (
               ((Number(binanceCoin.c) * Number(usdttry?.c) -
-                paribuCoin.lowestAsk) *
+                paribuCoin.highestBid) *
                 100) /
               (Number(binanceCoin.c) * Number(usdttry?.c))
             ).toFixed(3)
@@ -106,6 +112,12 @@ function CoinTracker() {
           newDataCopy.push(newObj);
         }
       });
+
+      const data1 = [
+        ...newDataCopy.filter((x) => x.isBuy),
+        ...newDataCopy.filter((x) => !x.isBuy),
+      ];
+      console.log(data1);
 
       return [
         ...newDataCopy.filter((x) => x.isBuy),
@@ -158,7 +170,7 @@ function CoinTracker() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      getParibuPrice();
+      if (!isMockData) getParibuPrice();
     }, 1000);
 
     const binanceSocket = new WebSocket(BINANCE_WEBSOCKET_URL);
@@ -176,7 +188,7 @@ function CoinTracker() {
       if (!event.data) return;
       const data: BinanceCoins = JSON.parse(event.data);
 
-      setUsdttry(data);
+      if (!isMockData) setUsdttry(data);
     };
 
     const binanceFSSocket = new WebSocket(FS_BINANCE_WEBSOCKET_URL);
@@ -195,7 +207,7 @@ function CoinTracker() {
       const data = JSON.parse(event.data);
       if (!data) return;
 
-      setBinanceCoins(data);
+      if (!isMockData) setBinanceCoins(data);
     };
     return () => {
       binanceFSSocket.close();
@@ -203,13 +215,6 @@ function CoinTracker() {
       clearInterval(interval);
     };
   }, []);
-
-  const handleChange = useCallback(
-    (value: number) => {
-      setPrincipal(value.toString());
-    },
-    [principal]
-  );
 
   const columns: GridColDef[] = [
     { field: "symbolBinance", headerName: "Binance Sembol", flex: 1 },
@@ -269,11 +274,24 @@ function CoinTracker() {
   return (
     <div
       key={combinedArray.length || selectedCoins.length}
-      style={{ maxWidth: "100%", height: "100vh" }}
+      style={{ maxWidth: "100vw", height: "100vh", padding: 10 }}
     >
+      <div style={{ display: "flex", marginBottom: 5 }}>
+        <TextField
+          id="outlined-basic"
+          label="Ana Para"
+          variant="outlined"
+          type="number"
+          value={principal}
+          onChange={(event) => setPrincipal(event.target.value)}
+          size="small"
+        />
+      </div>
+
       <DataGrid
         rows={combinedArray}
         columns={columns}
+        style={{ height: "93vh" }}
         checkboxSelection
         rowSelectionModel={selectedCoins}
         onRowSelectionModelChange={(newRowSelectionModel) => {
