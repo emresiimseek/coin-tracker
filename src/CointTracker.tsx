@@ -241,6 +241,12 @@ function CoinTracker() {
       type: "number",
     },
     {
+      field: "paribuDiff",
+      headerName: "Paribu Makas",
+      flex: 1,
+      type: "number",
+    },
+    {
       field: "buyDiff",
       headerName: "Alış Yüzde Fark",
       flex: 1,
@@ -252,12 +258,7 @@ function CoinTracker() {
       flex: 1,
       type: "number",
     },
-    {
-      field: "paribuDiff",
-      headerName: "Paribu Makas",
-      flex: 1,
-      type: "number",
-    },
+
     { field: "isBuy", headerName: "Satın Al", flex: 1, type: "boolean" },
     {
       field: "fixedParibuLowestAsk",
