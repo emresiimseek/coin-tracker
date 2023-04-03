@@ -30,5 +30,5 @@ form {
   flex-direction: column;
 }
 .buy {
-  background-color: #90ee90;
+  background-color: #90ee90 !important;
 }
