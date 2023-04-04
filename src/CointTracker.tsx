@@ -360,7 +360,9 @@ function CoinTracker() {
           setSelectedCoins(newRowSelectionModel);
         }}
         getRowClassName={(value) => {
-          return value.row.isBuy ? "buy" : "";
+          if (value.row.benefit && !value.row.isBuy) return "sell";
+          else if (value.row.isBuy) return "buy";
+          else return "";
         }}
       />
     </div>

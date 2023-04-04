@@ -30,5 +30,8 @@ form {
   flex-direction: column;
 }
 .buy {
-  background-color: #90ee90 !important;
+  background-color: #8fa63d !important;
+}
+.sell {
+  background-color: #db4f58 !important;
 }
