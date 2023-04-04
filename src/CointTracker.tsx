@@ -121,19 +121,7 @@ function CoinTracker() {
 
       return [
         ...newDataCopy.filter((x) => x.isBuy),
-        ...newDataCopy.filter(
-          (x) =>
-            Math.sign(x.sellDiff) === -1 &&
-            Math.sign(x.buyDiff) === 1 &&
-            x.benefit
-        ),
-        ...newDataCopy.filter(
-          (x) =>
-            !x.isBuy ||
-            (Math.sign(x.sellDiff) !== -1 &&
-              Math.sign(x.buyDiff) !== 1 &&
-              !x.benefit)
-        ),
+        ...newDataCopy.filter((x) => !x.isBuy),
       ];
     });
   };
@@ -369,8 +357,8 @@ function CoinTracker() {
         getRowClassName={(value) => {
           if (value.row.isBuy) return "buy";
           else if (
-            Math.sign(value.row.sellDiff) === -1 &&
-            Math.sign(value.row.buyDiff) === 1 &&
+            Math.sign(value.row.sellDiff) == -1 &&
+            Math.sign(value.row.buyDiff) == 1 &&
             value.row.benefit
           )
             return "sell";
