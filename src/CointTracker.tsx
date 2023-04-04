@@ -9,7 +9,7 @@ import {
   CombinedCoin,
 } from "./types/Coin";
 import { defaultArray } from "./defaultArray";
-import { TextField, Tooltip } from "@mui/material";
+import { TextField } from "@mui/material";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -119,13 +119,14 @@ function CoinTracker() {
         }
       });
 
-      const data1 = [
-        ...newDataCopy.filter((x) => x.isBuy),
-        ...newDataCopy.filter((x) => !x.isBuy),
-      ];
-
       return [
         ...newDataCopy.filter((x) => x.isBuy),
+        ...newDataCopy.filter(
+          (x) =>
+            Math.sign(x.sellDiff) === -1 &&
+            Math.sign(x.buyDiff) === 1 &&
+            x.benefit
+        ),
         ...newDataCopy.filter((x) => !x.isBuy),
       ];
     });
@@ -360,8 +361,13 @@ function CoinTracker() {
           setSelectedCoins(newRowSelectionModel);
         }}
         getRowClassName={(value) => {
-          if (value.row.benefit && !value.row.isBuy) return "sell";
-          else if (value.row.isBuy) return "buy";
+          if (value.row.isBuy) return "buy";
+          else if (
+            Math.sign(value.row.sellDiff) === -1 &&
+            Math.sign(value.row.buyDiff) === 1 &&
+            value.row.benefit
+          )
+            return "sell";
           else return "";
         }}
       />
