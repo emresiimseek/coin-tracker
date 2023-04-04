@@ -127,7 +127,13 @@ function CoinTracker() {
             Math.sign(x.buyDiff) === 1 &&
             x.benefit
         ),
-        ...newDataCopy.filter((x) => !x.isBuy),
+        ...newDataCopy.filter(
+          (x) =>
+            !x.isBuy ||
+            (Math.sign(x.sellDiff) !== -1 &&
+              Math.sign(x.buyDiff) !== 1 &&
+              !x.benefit)
+        ),
       ];
     });
   };
