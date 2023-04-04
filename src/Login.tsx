@@ -59,7 +59,7 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
             type="submit"
             variant="outlined"
             color="success"
-            style={{ marginTop: 10 }}
+            style={{ marginTop: 10, textTransform: "capitalize" }}
           >
             Giriş
           </Button>

@@ -9,7 +9,7 @@ import {
   CombinedCoin,
 } from "./types/Coin";
 import { defaultArray } from "./defaultArray";
-import { TextField } from "@mui/material";
+import { TextField, Tooltip } from "@mui/material";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -21,7 +21,7 @@ function CoinTracker() {
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
   const [isMockData, setIsMockData] = useState<boolean>(false);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
-    isMockData ? [] : []
+    isMockData ? defaultArray : []
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [principal, setPrincipal] = useState<string>("1000");
@@ -220,66 +220,94 @@ function CoinTracker() {
   }, []);
 
   const columns: GridColDef[] = [
-    { field: "symbolBinance", headerName: "Binance Sembol", flex: 1 },
+    {
+      field: "symbolBinance",
+      headerName: "Binance",
+      flex: 1,
+      description: "Binance Sembol",
+    },
     {
       field: "priceBinance",
-      headerName: "Binance Fiyat",
+      headerName: "Binance F.",
       flex: 1,
       type: "number",
+      description: "Binance Fiyat",
     },
-    { field: "symbolParibu", headerName: "Paribu Sembol", flex: 1 },
+    {
+      field: "symbolParibu",
+      headerName: "Paribu",
+      description: "Paribu Sembol",
+      flex: 1,
+    },
     {
       field: "paribuHighestBid",
-      headerName: "Paribu Satış",
+      headerName: "Paribu S.",
       flex: 1,
       type: "number",
+      description: "Paribu Satış",
     },
     {
       field: "paribuLowestAsk",
-      headerName: "Paribu Alış",
+      headerName: "Paribu A.",
       flex: 1,
       type: "number",
+      description: "Paribu Alış",
     },
+
     {
       field: "paribuDiff",
-      headerName: "Paribu Makas",
+      headerName: "Paribu M.",
       flex: 1,
       type: "number",
+      description: "Paribu Makas",
     },
     {
       field: "buyDiff",
-      headerName: "Alış Yüzde Fark",
+      headerName: "PAYF",
       flex: 1,
       type: "number",
+      description: "Paribu Alış Yüzde Fark",
     },
     {
       field: "sellDiff",
-      headerName: "Satış Yüzde Fark",
+      headerName: "PSYF",
       flex: 1,
       type: "number",
+      description: "Paribu Satış Yüzde Fark",
     },
 
-    { field: "isBuy", headerName: "Satın Al", flex: 1, type: "boolean" },
+    {
+      field: "isBuy",
+      headerName: "Satın Al",
+      flex: 1,
+      type: "boolean",
+      description: "Satın Al,",
+    },
     {
       field: "fixedParibuLowestAsk",
-      headerName: "Sabit Paribu Alış",
-      flex: 1,
+      headerName: "SPA",
       type: "number",
+      description: "Sabit Paribu Alış",
     },
     {
       field: "fixedParibuHighestBid",
-      headerName: "Sabit Paribu Satış",
-      flex: 1,
+      headerName: "SPS",
       type: "number",
+      description: "Sabit Paribu Satış",
     },
 
     {
       field: "fixedBinancePrice",
-      headerName: "Sabit Binance Fiyat",
-      flex: 1,
+      headerName: "SBF",
       type: "number",
+      description: "Sabit Binance Fiyat",
     },
-    { field: "benefit", headerName: "Kar", flex: 1, type: "number" },
+    {
+      field: "benefit",
+      headerName: "Kar",
+      type: "number",
+      description: "Kar",
+    },
   ];
 
   return (
