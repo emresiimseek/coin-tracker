@@ -263,17 +263,17 @@ function CoinTracker() {
     },
     {
       field: "buyDiff",
-      headerName: "PAYF",
+      headerName: "AYF",
       flex: 1,
       type: "number",
-      description: "Paribu Alış Yüzde Fark",
+      description: "Alış Yüzde Fark",
     },
     {
       field: "sellDiff",
-      headerName: "PSYF",
+      headerName: "SYF",
       flex: 1,
       type: "number",
-      description: "Paribu Satış Yüzde Fark",
+      description: "Satış Yüzde Fark",
     },
 
     {
