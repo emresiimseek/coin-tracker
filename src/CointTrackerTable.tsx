@@ -9,7 +9,7 @@ import {
   ParibuCoin,
   CombinedCoin,
 } from "./types/Coin";
-import { defaultArray } from "./defaultArray";
+import { defaultArray } from "./utils/default-array";
 import { Button, TextField } from "@mui/material";
 import { QueryModel } from "./types/QueryModel";
 
@@ -21,7 +21,7 @@ function CoinTracker() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
-  const [isMockData, setIsMockData] = useState<boolean>(false);
+  const [isMockData, setIsMockData] = useState<boolean>(true);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
     isMockData ? defaultArray : []
   );

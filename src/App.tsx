@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import CoinTracker from "./CointTracker";
+import CoinTracker from "./CointTrackerTable";
 import LoginScreen from "./Login";
+import "./App.css";
 
 function App() {
   const [isLogin, setIsLogin] = useState(false);
