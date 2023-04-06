@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
+import { Add, Remove } from "@mui/icons-material";
 
 import {
   BinanceCoins,
@@ -9,7 +10,8 @@ import {
   CombinedCoin,
 } from "./types/Coin";
 import { defaultArray } from "./defaultArray";
-import { TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
+import { QueryModel } from "./types/QueryModel";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -25,6 +27,21 @@ function CoinTracker() {
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [principal, setPrincipal] = useState<string>("1000");
+
+  useEffect(() => {
+    // Open a new window with the URL
+    if (!selectedCoins.length) return;
+
+    const sc = selectedCoins.at(selectedCoins.length - 1);
+
+    const currentIndex = combinedArray.findIndex((c) => c.id === sc);
+
+    const data = { ...combinedArray[currentIndex] };
+
+    // window.open(
+    //   `https://www.paribu.com/markets/${data.symbolParibu.toLowerCase()}?view=classic`
+    // );
+  }, [selectedCoins]);
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
@@ -100,7 +117,7 @@ function CoinTracker() {
             }
           });
 
-          if (existingObj.fixedBinancePrice == null) {
+          if (existingObj.fixedBinancePrice === null) {
             existingObj.benefit = null;
           } else {
             const count = +principal / (existingObj?.fixedParibuLowestAsk ?? 0);
@@ -109,7 +126,7 @@ function CoinTracker() {
               (existingObj?.fixedParibuLowestAsk ?? 0) * count;
             const binanceProfit = existingObj.priceBinance * count;
 
-            const b3 = (+existingObj.fixedBinancePrice ?? 0) * count;
+            const b3 = (Number(existingObj.fixedBinancePrice) ?? 0) * count;
             const kar = paribuProfit + (binanceProfit - b3) * -1;
 
             existingObj.benefit = kar;
@@ -214,12 +231,24 @@ function CoinTracker() {
     };
   }, []);
 
+  function createQueryString(params: QueryModel) {
+    let queryString = "";
+    for (let key in params) {
+      if (params.hasOwnProperty(key)) {
+        queryString += `&${key}=${params[key]}`;
+      }
+    }
+    // Remove the first '&' character
+    queryString = queryString.slice(1);
+    return `?${queryString}`;
+  }
+
   const columns: GridColDef[] = [
     {
-      field: "symbolBinance",
-      headerName: "Binance",
+      field: "symbolParibu",
+      headerName: "Sembol",
+      description: "Sembol",
       flex: 1,
-      description: "Binance Sembol",
     },
     {
       field: "priceBinance",
@@ -228,12 +257,7 @@ function CoinTracker() {
       type: "number",
       description: "Binance Fiyat",
     },
-    {
-      field: "symbolParibu",
-      headerName: "Paribu",
-      description: "Paribu Sembol",
-      flex: 1,
-    },
+
     {
       field: "paribuHighestBid",
       headerName: "Paribu S.",
@@ -270,14 +294,6 @@ function CoinTracker() {
       type: "number",
       description: "Satış Yüzde Fark",
     },
-
-    {
-      field: "isBuy",
-      headerName: "Satın Al",
-      flex: 1,
-      type: "boolean",
-      description: "Satın Al,",
-    },
     {
       field: "fixedParibuLowestAsk",
       headerName: "SPA",
@@ -303,6 +319,78 @@ function CoinTracker() {
       type: "number",
       description: "Kar",
     },
+    // {
+    //   field: "Anapara",
+    //   headerName: "Anapara",
+    //   type: "number",
+    //   description: "Anapara",
+    //   renderCell: (params) => {
+    //     if (params.row.fixedParibuLowestAsk) {
+    //       console.log("emre");
+    //     }
+
+    //     const count = +principal / +params.row.fixedParibuLowestAsk;
+    //     const realPrincipal =
+    //       Math.ceil(count) * +params.row.fixedParibuLowestAsk +
+    //       (Math.ceil(count) * +params.row.fixedBinancePrice) / 3;
+
+    //     return realPrincipal;
+    //   },
+    // },
+    {
+      field: "paribuBuy",
+      headerName: "Paribu Al",
+      renderCell: (params) => {
+        return (
+          <Button
+            variant="outlined"
+            color="success"
+            startIcon={<Add />}
+            onClick={() => {
+              const query = createQueryString({
+                paribuBuyPrice: params.row.paribuLowestAsk,
+                paribuSellPrice: params.row.paribuHighestBid,
+                symbolParibu: params.row.symbolParibu,
+                amount: "100",
+                type: "buy",
+              });
+              window.open(
+                `https://www.paribu.com/markets/${params.row.symbolParibu.toLowerCase()}?${query}`
+              );
+            }}
+          >
+            Al
+          </Button>
+        );
+      },
+    },
+    {
+      field: "paribuSell",
+      headerName: "Paribu Sat",
+      renderCell: (params) => {
+        return (
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<Remove />}
+            onClick={() => {
+              const query = createQueryString({
+                paribuBuyPrice: params.row.paribuLowestAsk,
+                paribuSellPrice: params.row.paribuHighestBid,
+                symbolParibu: params.row.symbolParibu,
+                amount: "100",
+                type: "sell",
+              });
+              window.open(
+                `https://www.paribu.com/markets/${params.row.symbolParibu.toLowerCase()}?${query}`
+              );
+            }}
+          >
+            Sat
+          </Button>
+        );
+      },
+    },
   ];
 
   return (
@@ -313,7 +401,7 @@ function CoinTracker() {
       <div style={{ display: "flex", marginBottom: 5 }}>
         <TextField
           id="outlined-basic"
-          label="Ana Para"
+          label="Paribu Alış Tutarı"
           variant="outlined"
           type="number"
           value={principal}
@@ -357,8 +445,8 @@ function CoinTracker() {
         getRowClassName={(value) => {
           if (value.row.isBuy) return "buy";
           else if (
-            Math.sign(value.row.sellDiff) == -1 &&
-            Math.sign(value.row.buyDiff) == 1 &&
+            Math.sign(value.row.sellDiff) === -1 &&
+            Math.sign(value.row.buyDiff) === 1 &&
             value.row.benefit
           )
             return "sell";
