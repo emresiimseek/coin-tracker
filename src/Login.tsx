@@ -16,7 +16,6 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
-    console.log(process.env.REACT_APP_API_KEY);
 
     if (
       username === process.env.REACT_APP_USER_NAME &&
