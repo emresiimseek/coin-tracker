@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+  GridRowSelectionModel,
+} from "@mui/x-data-grid";
 import { Add, Remove } from "@mui/icons-material";
 
 import {
@@ -12,6 +17,7 @@ import {
 import { defaultArray } from "./utils/default-array";
 import { Button, TextField } from "@mui/material";
 import { QueryModel } from "./types/QueryModel";
+import { createNewOrder } from "./binance-api";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -21,7 +27,7 @@ function CoinTracker() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
-  const [isMockData, setIsMockData] = useState<boolean>(true);
+  const [isMockData, setIsMockData] = useState<boolean>(false);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
     isMockData ? defaultArray : []
   );
@@ -86,6 +92,7 @@ function CoinTracker() {
           paribuHighestBid: paribuCoin.highestBid,
           paribuLowestAsk: paribuCoin.lowestAsk,
           id: binanceCoin.s + paribuCoin.symbol,
+          priceBinanceReal: binanceCoin.c,
           buyDiff,
           isBuy,
           sellDiff,
@@ -117,7 +124,7 @@ function CoinTracker() {
             }
           });
 
-          if (existingObj.fixedBinancePrice === null) {
+          if (!existingObj.fixedBinancePrice) {
             existingObj.benefit = null;
           } else {
             const count = +principal / (existingObj?.fixedParibuLowestAsk ?? 0);
@@ -343,7 +350,7 @@ function CoinTracker() {
       renderCell: (params) => {
         return (
           <Button
-            variant="outlined"
+            variant="contained"
             color="success"
             startIcon={<Add />}
             onClick={() => {
@@ -370,8 +377,8 @@ function CoinTracker() {
       renderCell: (params) => {
         return (
           <Button
-            variant="outlined"
-            color="primary"
+            variant="contained"
+            color="warning"
             startIcon={<Remove />}
             onClick={() => {
               const query = createQueryString({
@@ -384,6 +391,54 @@ function CoinTracker() {
               window.open(
                 `https://www.paribu.com/markets/${params.row.symbolParibu.toLowerCase()}?${query}`
               );
+            }}
+          >
+            Sat
+          </Button>
+        );
+      },
+    },
+    {
+      field: "binanceBuy",
+      headerName: "Binance Al",
+      renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
+        return (
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<Add />}
+            onClick={() => {
+              createNewOrder({
+                symbol: params.row.symbolBinance,
+                side: "BUY",
+                type: "LIMIT",
+                quantity: "0.001",
+                price: params.row.priceBinanceReal.toString(),
+              });
+            }}
+          >
+            Al
+          </Button>
+        );
+      },
+    },
+    {
+      field: "binanceSell",
+      headerName: "Binance Sat",
+      renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
+        return (
+          <Button
+            variant="contained"
+            color="warning"
+            startIcon={<Remove />}
+            onClick={() => {
+              createNewOrder({
+                symbol: params.row.symbolBinance,
+                side: "BUY",
+                type: "LIMIT",
+                quantity: "0.001",
+                price: params.row.priceBinanceReal.toString(),
+              });
             }}
           >
             Sat

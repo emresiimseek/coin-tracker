@@ -15,12 +15,7 @@
     "isolatedModules": true,
     "baseUrl": "./",
     "noEmit": true,
-    "paths": {
-      "crypto": ["node_modules/crypto-browserify"],
-      "stream": ["node_modules/stream-browserify"]
-    },
     "jsx": "react-jsx"
   },
-
   "include": ["src"]
 }

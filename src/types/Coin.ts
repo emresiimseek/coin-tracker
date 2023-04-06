@@ -72,4 +72,5 @@ export interface CombinedCoin {
   fixedBinancePrice?: number | null;
   benefit?: number | null;
   paribuDiff: number;
+  priceBinanceReal: string;
 }
