@@ -4,6 +4,6 @@ export interface BinanceOrderRequest {
   type: string;
   timestamp?: number;
   price?: string;
-  quantity?: string;
+  quantity?: number;
   signature?: string;
 }

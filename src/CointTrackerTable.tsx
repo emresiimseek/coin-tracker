@@ -5,6 +5,7 @@ import {
   GridColDef,
   GridRenderCellParams,
   GridRowSelectionModel,
+  GridValueGetterParams,
 } from "@mui/x-data-grid";
 import { Add, Remove } from "@mui/icons-material";
 
@@ -279,7 +280,6 @@ function CoinTracker() {
       type: "number",
       description: "Paribu Alış",
     },
-
     {
       field: "paribuDiff",
       headerName: "Paribu M.",
@@ -358,7 +358,7 @@ function CoinTracker() {
                 paribuBuyPrice: params.row.paribuLowestAsk,
                 paribuSellPrice: params.row.paribuHighestBid,
                 symbolParibu: params.row.symbolParibu,
-                amount: "100",
+                amount: (+principal / params.row.paribuLowestAsk).toFixed(1),
                 type: "buy",
               });
               window.open(
@@ -385,7 +385,7 @@ function CoinTracker() {
                 paribuBuyPrice: params.row.paribuLowestAsk,
                 paribuSellPrice: params.row.paribuHighestBid,
                 symbolParibu: params.row.symbolParibu,
-                amount: "100",
+                amount: (+principal / params.row.paribuLowestAsk).toFixed(1),
                 type: "sell",
               });
               window.open(
@@ -412,7 +412,12 @@ function CoinTracker() {
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
-                quantity: "0.001",
+                quantity: parseFloat(
+                  (
+                    (+principal / Number(usdttry?.c) ?? 0) /
+                    params.row.priceBinance
+                  ).toFixed(6)
+                ),
                 price: params.row.priceBinanceReal.toString(),
               });
             }}
@@ -436,7 +441,7 @@ function CoinTracker() {
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
-                quantity: "0.001",
+                quantity: +principal / params.row.paribuLowestAsk,
                 price: params.row.priceBinanceReal.toString(),
               });
             }}

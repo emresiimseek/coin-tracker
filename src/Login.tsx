@@ -30,7 +30,6 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
   return (
     <div className="login-base">
       <div className="login-container">
-        <h2>Giriş</h2>
         <form onSubmit={handleSubmit}>
           <TextField
             id="outlined-basic"
@@ -52,12 +51,11 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
             onChange={handlePasswordChange}
             size="small"
           />
-
           <Button
             type="submit"
             variant="outlined"
             color="success"
-            style={{ marginTop: 10, textTransform: "capitalize" }}
+            style={{ textTransform: "capitalize" }}
           >
             Giriş
           </Button>

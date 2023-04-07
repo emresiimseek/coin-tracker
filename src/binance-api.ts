@@ -9,8 +9,6 @@ export const createNewOrder = async (request: BinanceOrderRequest) => {
   request.timestamp = Date.now();
   const queryString = `symbol=${request.symbol}&price=${request.price}&quantity=${request.quantity}&side=${request.side}&timestamp=${request.timestamp}&type=${request.type}&timeInForce=GTC`;
 
-  if (typeof process === "undefined") return;
-
   const signature = CryptoES.HmacSHA256(
     queryString,
     process.env.REACT_APP_API_SECRET ?? ""
