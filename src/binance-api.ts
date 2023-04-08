@@ -55,7 +55,7 @@ export const setLeverage = (symbol: string) => {
   ).toString(CryptoES.enc.Hex);
 
   axios.post(
-    `https://corsanywhere.herokuapp.com/${baseUrl}/${endpoint2}?${queryString}&signature=${signature}`,
+    `${baseUrl}/${endpoint2}?${queryString}&signature=${signature}`,
     null,
     {
       headers: {
