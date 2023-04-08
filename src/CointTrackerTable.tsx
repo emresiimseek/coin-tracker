@@ -5,7 +5,6 @@ import {
   GridColDef,
   GridRenderCellParams,
   GridRowSelectionModel,
-  GridValueGetterParams,
 } from "@mui/x-data-grid";
 import { Add, Remove } from "@mui/icons-material";
 
@@ -18,7 +17,8 @@ import {
 import { defaultArray } from "./utils/default-array";
 import { Button, TextField } from "@mui/material";
 import { QueryModel } from "./types/QueryModel";
-import { createNewOrder } from "./binance-api";
+import { createNewOrder, getExchange, setLeverage } from "./binance-api";
+import { Symbol } from "./types/ExchangeResponse";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -34,6 +34,8 @@ function CoinTracker() {
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [principal, setPrincipal] = useState<string>("1000");
+
+  const [exchangeInfo, setExchangeInfo] = useState<Symbol[]>([]);
 
   useEffect(() => {
     // Open a new window with the URL
@@ -191,7 +193,15 @@ function CoinTracker() {
     });
   };
 
+  const getExchangeData = async () => {
+    const data = await getExchange();
+
+    setExchangeInfo(data);
+  };
+
   useEffect(() => {
+    getExchangeData();
+
     const interval = setInterval(() => {
       if (!isMockData) getParibuPrice();
     }, 1000);
@@ -408,15 +418,15 @@ function CoinTracker() {
             color="success"
             startIcon={<Add />}
             onClick={() => {
+              const symbol = exchangeInfo.find(
+                (ei) => ei.symbol === params.row.symbolBinance
+              );
               createNewOrder({
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
-                quantity: parseFloat(
-                  (
-                    (+principal / Number(usdttry?.c) ?? 0) /
-                    params.row.priceBinance
-                  ).toFixed(6)
+                quantity: +(+principal / +params.row.priceBinanceReal).toFixed(
+                  symbol?.quantityPrecision
                 ),
                 price: params.row.priceBinanceReal.toString(),
               });
@@ -437,11 +447,17 @@ function CoinTracker() {
             color="warning"
             startIcon={<Remove />}
             onClick={() => {
+              const symbol = exchangeInfo.find(
+                (ei) => ei.symbol === params.row.symbolBinance
+              );
+
               createNewOrder({
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
-                quantity: +principal / params.row.paribuLowestAsk,
+                quantity: +(+principal / +params.row.priceBinanceReal).toFixed(
+                  symbol?.quantityPrecision
+                ),
                 price: params.row.priceBinanceReal.toString(),
               });
             }}
@@ -468,6 +484,7 @@ function CoinTracker() {
           onChange={(event) => setPrincipal(event.target.value)}
           size="small"
         />
+        <Button onClick={() => setLeverage("BTCUSDT")}>Leverage</Button>
       </div>
 
       <DataGrid
