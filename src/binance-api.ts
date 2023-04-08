@@ -5,7 +5,10 @@ import { ExchangeInfo } from "./types/ExchangeResponse";
 
 const baseUrl = "https://fapi.binance.com";
 const endpoint = "fapi/v1/order";
-const endpoint2 = "/fapi/v1/leverage";
+
+const proxyBaseUrl = "https://proxy-server-u3x4.onrender.com/";
+const proxyLeverageEndpoint = "leverage";
+const proxyMarginTypeEndpoint = "margin";
 
 export const createNewOrder = async (request: BinanceOrderRequest) => {
   request.timestamp = Date.now();
@@ -55,11 +58,35 @@ export const setLeverage = (symbol: string) => {
   ).toString(CryptoES.enc.Hex);
 
   axios.post(
-    `${baseUrl}/${endpoint2}?${queryString}&signature=${signature}`,
+    `${proxyBaseUrl}${proxyLeverageEndpoint}?${queryString}&signature=${signature}`,
     null,
     {
       headers: {
         "X-MBX-APIKEY": process.env.REACT_APP_API_KEY ?? "",
+        rejectUnauthorized: false,
+      },
+    }
+  );
+};
+
+export const changeMarginType = (symbol: string) => {
+  const marginType = "ISOLATED";
+  const timestamp = Date.now();
+
+  const queryString = `symbol=${symbol}&marginType=${marginType}&timestamp=${timestamp}`;
+
+  const signature = CryptoES.HmacSHA256(
+    queryString,
+    process.env.REACT_APP_API_SECRET ?? ""
+  ).toString(CryptoES.enc.Hex);
+
+  axios.post(
+    `${proxyBaseUrl}${proxyMarginTypeEndpoint}?${queryString}&signature=${signature}`,
+    null,
+    {
+      headers: {
+        "X-MBX-APIKEY": process.env.REACT_APP_API_KEY ?? "",
+        rejectUnauthorized: false,
       },
     }
   );

@@ -17,7 +17,12 @@ import {
 import { defaultArray } from "./utils/default-array";
 import { Button, TextField } from "@mui/material";
 import { QueryModel } from "./types/QueryModel";
-import { createNewOrder, getExchange, setLeverage } from "./binance-api";
+import {
+  changeMarginType,
+  createNewOrder,
+  getExchange,
+  setLeverage,
+} from "./binance-api";
 import { Symbol } from "./types/ExchangeResponse";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
@@ -66,12 +71,9 @@ function CoinTracker() {
       });
       if (paribuCoin && usdttry?.c) {
         const buyDiff = Number(
-          (
-            ((paribuCoin.lowestAsk -
-              Number(binanceCoin.c) * Number(usdttry?.c)) *
-              100) /
+          ((paribuCoin.lowestAsk - Number(binanceCoin.c) * Number(usdttry?.c)) *
+            100) /
             paribuCoin.lowestAsk
-          ).toFixed(3)
         );
 
         const isBuy =
@@ -81,12 +83,10 @@ function CoinTracker() {
           -0.1;
 
         const sellDiff = Number(
-          (
-            ((Number(binanceCoin.c) * Number(usdttry?.c) -
-              paribuCoin.highestBid) *
-              100) /
+          ((Number(binanceCoin.c) * Number(usdttry?.c) -
+            paribuCoin.highestBid) *
+            100) /
             (Number(binanceCoin.c) * Number(usdttry?.c))
-          ).toFixed(3)
         );
         const data: CombinedCoin = {
           symbolBinance: binanceCoin.s,
@@ -280,61 +280,59 @@ function CoinTracker() {
       field: "paribuHighestBid",
       headerName: "Paribu S.",
       flex: 1,
-      type: "number",
       description: "Paribu Satış",
     },
     {
       field: "paribuLowestAsk",
       headerName: "Paribu A.",
       flex: 1,
-      type: "number",
       description: "Paribu Alış",
     },
     {
       field: "paribuDiff",
       headerName: "Paribu M.",
-      flex: 1,
       type: "number",
+      flex: 1,
       description: "Paribu Makas",
     },
     {
       field: "buyDiff",
       headerName: "AYF",
-      flex: 1,
       type: "number",
+      flex: 1,
       description: "Alış Yüzde Fark",
     },
     {
       field: "sellDiff",
       headerName: "SYF",
-      flex: 1,
       type: "number",
+      flex: 1,
       description: "Satış Yüzde Fark",
     },
     {
       field: "fixedParibuLowestAsk",
       headerName: "SPA",
-      type: "number",
       description: "Sabit Paribu Alış",
+      type: "number",
     },
     {
       field: "fixedParibuHighestBid",
       headerName: "SPS",
-      type: "number",
       description: "Sabit Paribu Satış",
+      type: "number",
     },
 
     {
       field: "fixedBinancePrice",
       headerName: "SBF",
-      type: "number",
       description: "Sabit Binance Fiyat",
+      type: "number",
     },
     {
       field: "benefit",
       headerName: "Kar",
-      type: "number",
       description: "Kar",
+      type: "number",
     },
     // {
     //   field: "Anapara",
@@ -485,11 +483,14 @@ function CoinTracker() {
           size="small"
         />
         <Button onClick={() => setLeverage("BTCUSDT")}>Leverage</Button>
+        <Button onClick={() => changeMarginType("OCEANUSDT")}>Margin</Button>
       </div>
 
       <DataGrid
+        slotProps={{ toolbar: {} }}
         rows={combinedArray}
         columns={columns}
+        density="compact"
         style={{ height: "93vh" }}
         checkboxSelection
         rowSelectionModel={selectedCoins}
