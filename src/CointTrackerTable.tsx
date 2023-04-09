@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
   DataGrid,
   GridColDef,
+  GridFooterContainer,
+  GridPagination,
   GridRenderCellParams,
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
@@ -17,13 +19,9 @@ import {
 import { defaultArray } from "./utils/default-array";
 import { Button, TextField } from "@mui/material";
 import { QueryModel } from "./types/QueryModel";
-import {
-  changeMarginType,
-  createNewOrder,
-  getExchange,
-  setLeverage,
-} from "./binance-api";
+import { createNewOrder, getExchange } from "./binance-api";
 import { Symbol } from "./types/ExchangeResponse";
+import SettingsModal from "./SettingsModal";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -33,14 +31,14 @@ function CoinTracker() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
-  const [isMockData, setIsMockData] = useState<boolean>(false);
+  const [isMockData, setIsMockData] = useState<boolean>(true);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
-    isMockData ? defaultArray : []
+    isMockData ? defaultArray() : []
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
-  const [principal, setPrincipal] = useState<string>("1000");
+  const [symbols, setSymbol] = useState<Symbol[]>([]);
 
-  const [exchangeInfo, setExchangeInfo] = useState<Symbol[]>([]);
+  const items = useMemo(() => symbols, [symbols]);
 
   useEffect(() => {
     // Open a new window with the URL
@@ -96,9 +94,11 @@ function CoinTracker() {
           paribuLowestAsk: paribuCoin.lowestAsk,
           id: binanceCoin.s + paribuCoin.symbol,
           priceBinanceReal: binanceCoin.c,
+          unit: "",
           buyDiff,
           isBuy,
           sellDiff,
+          paribuBuyPrice: "",
           paribuDiff:
             ((paribuCoin.highestBid - paribuCoin.lowestAsk) /
               paribuCoin.highestBid) *
@@ -130,7 +130,10 @@ function CoinTracker() {
           if (!existingObj.fixedBinancePrice) {
             existingObj.benefit = null;
           } else {
-            const count = +principal / (existingObj?.fixedParibuLowestAsk ?? 0);
+            const count = existingObj.unit
+              ? +existingObj.unit
+              : +existingObj.paribuBuyPrice /
+                (existingObj?.fixedParibuLowestAsk ?? 0);
             const paribuProfit =
               existingObj.paribuHighestBid * count -
               (existingObj?.fixedParibuLowestAsk ?? 0) * count;
@@ -196,7 +199,7 @@ function CoinTracker() {
   const getExchangeData = async () => {
     const data = await getExchange();
 
-    setExchangeInfo(data);
+    setSymbol(data as Symbol[]);
   };
 
   useEffect(() => {
@@ -334,28 +337,64 @@ function CoinTracker() {
       description: "Kar",
       type: "number",
     },
-    // {
-    //   field: "Anapara",
-    //   headerName: "Anapara",
-    //   type: "number",
-    //   description: "Anapara",
-    //   renderCell: (params) => {
-    //     if (params.row.fixedParibuLowestAsk) {
-    //       console.log("emre");
-    //     }
+    {
+      field: "paribuBuyPrice",
+      headerName: "Paribu Alış Tutarı",
+      description: "Paribu Alış Tutarı",
+      type: "action",
+      renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
+        return (
+          <TextField
+            value={params.row.paribuBuyPrice}
+            type="number"
+            disabled={!params.row.fixedParibuLowestAsk}
+            onChange={(event) => {
+              updatePrice([
+                { ...params.row, paribuBuyPrice: event.target.value },
+              ]);
+            }}
+          />
+        );
+      },
+    },
+    {
+      field: "amount",
+      headerName: "Miktar",
+      description: "Miktar",
+      type: "action",
+      renderCell: (params) => {
+        return (
+          <TextField
+            disabled={!params.row.fixedParibuLowestAsk}
+            value={params.row.unit}
+            type="number"
+            onChange={(event) => {
+              updatePrice([{ ...params.row, unit: event.target.value }]);
+            }}
+          />
+        );
+      },
+    },
+    {
+      field: "binanceTotalPrice",
+      headerName: "Binance Toplam Miktar",
+      description: "Binance Toplam Miktar",
+      type: "number",
+      valueGetter: (params: GridRenderCellParams<CombinedCoin>) => {
+        if (!params.row?.unit && !params.row.paribuBuyPrice) return "";
 
-    //     const count = +principal / +params.row.fixedParibuLowestAsk;
-    //     const realPrincipal =
-    //       Math.ceil(count) * +params.row.fixedParibuLowestAsk +
-    //       (Math.ceil(count) * +params.row.fixedBinancePrice) / 3;
+        const quantity = params.row.unit
+          ? +params.row.unit
+          : +params.row.paribuBuyPrice /
+              Number(params.row.fixedParibuLowestAsk) ?? 0;
 
-    //     return realPrincipal;
-    //   },
-    // },
+        return quantity * Number(params.row.fixedBinancePrice ?? 0);
+      },
+    },
     {
       field: "paribuBuy",
       headerName: "Paribu Al",
-      renderCell: (params) => {
+      renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
         return (
           <Button
             variant="contained"
@@ -363,10 +402,13 @@ function CoinTracker() {
             startIcon={<Add />}
             onClick={() => {
               const query = createQueryString({
-                paribuBuyPrice: params.row.paribuLowestAsk,
-                paribuSellPrice: params.row.paribuHighestBid,
+                paribuBuyPrice: params.row.paribuLowestAsk.toString(),
+                paribuSellPrice: params.row.paribuHighestBid.toString(),
                 symbolParibu: params.row.symbolParibu,
-                amount: (+principal / params.row.paribuLowestAsk).toFixed(1),
+                amount: (params.row.unit
+                  ? +params.row.unit
+                  : +params.row.paribuBuyPrice / params.row.paribuLowestAsk
+                ).toFixed(1),
                 type: "buy",
               });
               window.open(
@@ -382,7 +424,7 @@ function CoinTracker() {
     {
       field: "paribuSell",
       headerName: "Paribu Sat",
-      renderCell: (params) => {
+      renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
         return (
           <Button
             variant="contained"
@@ -390,12 +432,18 @@ function CoinTracker() {
             startIcon={<Remove />}
             onClick={() => {
               const query = createQueryString({
-                paribuBuyPrice: params.row.paribuLowestAsk,
-                paribuSellPrice: params.row.paribuHighestBid,
+                paribuBuyPrice: params.row.paribuLowestAsk.toString(),
+                paribuSellPrice: params.row.paribuHighestBid.toString(),
                 symbolParibu: params.row.symbolParibu,
-                amount: (+principal / params.row.paribuLowestAsk).toFixed(1),
+                amount: (params.row.unit
+                  ? +params.row.unit
+                  : +params.row.paribuBuyPrice / params.row.paribuLowestAsk
+                ).toFixed(1),
                 type: "sell",
               });
+
+              console.log(query);
+
               window.open(
                 `https://www.paribu.com/markets/${params.row.symbolParibu.toLowerCase()}?${query}`
               );
@@ -416,16 +464,18 @@ function CoinTracker() {
             color="success"
             startIcon={<Add />}
             onClick={() => {
-              const symbol = exchangeInfo.find(
+              const symbol = symbols.find(
                 (ei) => ei.symbol === params.row.symbolBinance
               );
               createNewOrder({
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
-                quantity: +(+principal / +params.row.priceBinanceReal).toFixed(
-                  symbol?.quantityPrecision
-                ),
+                quantity: +(
+                  params.row.unit
+                    ? +params.row.unit
+                    : +params.row.paribuBuyPrice / +params.row.priceBinanceReal
+                ).toFixed(symbol?.quantityPrecision),
                 price: params.row.priceBinanceReal.toString(),
               });
             }}
@@ -445,7 +495,7 @@ function CoinTracker() {
             color="warning"
             startIcon={<Remove />}
             onClick={() => {
-              const symbol = exchangeInfo.find(
+              const symbol = symbols.find(
                 (ei) => ei.symbol === params.row.symbolBinance
               );
 
@@ -453,9 +503,11 @@ function CoinTracker() {
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
-                quantity: +(+principal / +params.row.priceBinanceReal).toFixed(
-                  symbol?.quantityPrecision
-                ),
+                quantity: +(
+                  params.row.unit
+                    ? +params.row.unit
+                    : +params.row.paribuBuyPrice / +params.row.priceBinanceReal
+                ).toFixed(symbol?.quantityPrecision),
                 price: params.row.priceBinanceReal.toString(),
               });
             }}
@@ -472,26 +524,20 @@ function CoinTracker() {
       key={combinedArray.length || selectedCoins.length}
       style={{ maxWidth: "100vw", height: "100vh", padding: 10 }}
     >
-      <div style={{ display: "flex", marginBottom: 5 }}>
-        <TextField
-          id="outlined-basic"
-          label="Paribu Alış Tutarı"
-          variant="outlined"
-          type="number"
-          value={principal}
-          onChange={(event) => setPrincipal(event.target.value)}
-          size="small"
-        />
-        <Button onClick={() => setLeverage("BTCUSDT")}>Leverage</Button>
-        <Button onClick={() => changeMarginType("OCEANUSDT")}>Margin</Button>
-      </div>
-
       <DataGrid
-        slotProps={{ toolbar: {} }}
         rows={combinedArray}
+        disableRowSelectionOnClick
+        components={{
+          Footer: () => (
+            <GridFooterContainer>
+              <SettingsModal symbols={items} />
+              <GridPagination style={{ flex: 1 }} />
+            </GridFooterContainer>
+          ),
+        }}
         columns={columns}
-        density="compact"
-        style={{ height: "93vh" }}
+        density="comfortable"
+        style={{ height: "98vh" }}
         checkboxSelection
         rowSelectionModel={selectedCoins}
         onRowSelectionModelChange={(newRowSelectionModel) => {

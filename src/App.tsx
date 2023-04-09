@@ -4,22 +4,21 @@ import LoginScreen from "./Login";
 import "./App.css";
 
 function App() {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState<boolean>(false);
 
   useEffect(() => {
     const data = sessionStorage.getItem("isLogin");
     setIsLogin(!!data);
   }, []);
 
-  return (
-    <>
-      {isLogin ? (
-        <CoinTracker />
-      ) : (
-        <LoginScreen onLogin={(value) => setIsLogin(value)} />
-      )}
-    </>
-  );
+  const AppComponent = () =>
+    isLogin ? (
+      <CoinTracker />
+    ) : (
+      <LoginScreen onLogin={(value) => setIsLogin(value)} />
+    );
+
+  return <AppComponent />;
 }
 
 export default App;

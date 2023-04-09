@@ -46,9 +46,8 @@ export const getExchange = async () => {
   return usdtCoins;
 };
 
-export const setLeverage = (symbol: string) => {
+export const setLeverageApi = (symbol: string, leverage: string = "3") => {
   const timestamp = Date.now();
-  const leverage = 3;
 
   const queryString = `symbol=${symbol}&leverage=${leverage}&timestamp=${timestamp}`;
 
@@ -69,8 +68,10 @@ export const setLeverage = (symbol: string) => {
   );
 };
 
-export const changeMarginType = (symbol: string) => {
-  const marginType = "ISOLATED";
+export const changeMarginType = (
+  symbol: string,
+  marginType: "ISOLATED" | "CROSSED" = "ISOLATED"
+) => {
   const timestamp = Date.now();
 
   const queryString = `symbol=${symbol}&marginType=${marginType}&timestamp=${timestamp}`;

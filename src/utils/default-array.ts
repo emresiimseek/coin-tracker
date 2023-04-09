@@ -12,6 +12,8 @@ export const defaultArray = () => [
     paribuDiff: 0.038,
     benefit: null,
     priceBinanceReal: "1",
+    unit: "",
+    paribuBuyPrice: "",
   },
   {
     symbolBinance: "XLMUSDT",
@@ -26,6 +28,8 @@ export const defaultArray = () => [
     paribuDiff: -0.088,
     benefit: null,
     priceBinanceReal: "1",
+    unit: "",
+    paribuBuyPrice: "",
   },
   {
     symbolBinance: "XTZUSDT",
@@ -40,6 +44,8 @@ export const defaultArray = () => [
     paribuDiff: -1.875,
     benefit: null,
     priceBinanceReal: "1",
+    unit: "",
+    paribuBuyPrice: "",
   },
   {
     symbolBinance: "BATUSDT",
@@ -54,6 +60,8 @@ export const defaultArray = () => [
     paribuDiff: -0.462,
     benefit: null,
     priceBinanceReal: "1",
+    unit: "",
+    paribuBuyPrice: "",
   },
   {
     symbolBinance: "ZILUSDT",
@@ -68,5 +76,7 @@ export const defaultArray = () => [
     paribuDiff: -0.341,
     benefit: null,
     priceBinanceReal: "1",
+    unit: "",
+    paribuBuyPrice: "",
   },
 ];
