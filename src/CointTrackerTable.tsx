@@ -31,7 +31,7 @@ function CoinTracker() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
-  const [isMockData, setIsMockData] = useState<boolean>(true);
+  const [isMockData, setIsMockData] = useState<boolean>(false);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
     isMockData ? defaultArray() : []
   );
@@ -536,7 +536,7 @@ function CoinTracker() {
           ),
         }}
         columns={columns}
-        density="comfortable"
+        density="standard"
         style={{ height: "98vh" }}
         checkboxSelection
         rowSelectionModel={selectedCoins}

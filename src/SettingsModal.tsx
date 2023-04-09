@@ -3,7 +3,6 @@ import {
   Modal,
   IconButton,
   Button,
-  Input,
   TextField,
   FormControl,
   InputLabel,
@@ -12,18 +11,13 @@ import {
 } from "@mui/material";
 import { useState, memo } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Symbol, Filter } from "./types/ExchangeResponse";
-import {
-  DataGrid,
-  GridCellParams,
-  GridColDef,
-  GridRowSelectionModel,
-} from "@mui/x-data-grid";
+import { Symbol } from "./types/ExchangeResponse";
+import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { changeMarginType, setLeverageApi } from "./binance-api";
 export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
   const [open, setOpen] = useState(false);
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
-  const [leverage, setLeverage] = useState<string>("");
+  const [leverage, setLeverage] = useState<string>("3");
   const [marginType, setMarginType] = useState<"ISOLATED" | "CROSSED">(
     "ISOLATED"
   );
@@ -90,28 +84,6 @@ export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
       headerName: "Margin Asset",
       flex: 1,
       description: "Margin Asset",
-    },
-    {
-      field: "filters",
-      headerName: "Filters",
-      flex: 1,
-      description: "Filters",
-      renderCell: (params: GridCellParams) => {
-        const filters = params.value as Filter[];
-        return (
-          <>
-            {filters.map((filter) => (
-              <div key={filter.filterType}>
-                {filter.filterType}:{" "}
-                {Object.entries(filter)
-                  .filter(([key]) => key !== "filterType")
-                  .map(([key, value]) => `${key}=${value}`)
-                  .join(", ")}
-              </div>
-            ))}
-          </>
-        );
-      },
     },
   ];
 
