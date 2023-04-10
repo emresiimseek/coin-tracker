@@ -404,6 +404,7 @@ function CoinTracker() {
       renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
         return (
           <TextField
+            size="small"
             value={params.row.paribuBuyPrice}
             InputProps={{
               inputComponent: NumericFormatCustom as any,
@@ -440,6 +441,7 @@ function CoinTracker() {
           <TextField
             value={params.row.unit}
             type="number"
+            size="small"
             onChange={(event) => {
               const getParibuBuyPrice = () => {
                 if (!event.target.value || !params.row.fixedParibuLowestAsk)
@@ -471,10 +473,14 @@ function CoinTracker() {
           prefix: "₺",
           decimalScale: 3,
         }),
-      description: "Binance Toplam Tutar",
+      description: "Binance Alış Tutarı",
       flex: 1,
       valueGetter: (params: GridRenderCellParams<CombinedCoin>) => {
-        if (!params.row?.unit && !params.row.paribuBuyPrice) return "";
+        if (
+          (!params.row?.unit && !params.row.paribuBuyPrice) ||
+          !params.row.fixedBinancePrice
+        )
+          return "";
 
         const quantity = params.row.unit
           ? +params.row.unit
@@ -638,12 +644,16 @@ function CoinTracker() {
           combinedArray[currentIndex].fixedParibuHighestBid = null;
           combinedArray[currentIndex].fixedParibuLowestAsk = null;
           combinedArray[currentIndex].fixedBinancePrice = null;
+          combinedArray[currentIndex].paribuBuyPrice = "";
         } else {
           combinedArray[currentIndex].fixedParibuHighestBid =
             data.paribuHighestBid;
           combinedArray[currentIndex].fixedParibuLowestAsk =
             data.paribuLowestAsk;
           combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
+          combinedArray[currentIndex].paribuBuyPrice = (
+            Number(data.unit) * Number(data.paribuLowestAsk)
+          ).toString();
         }
 
         updatePrice([combinedArray[currentIndex]]);
