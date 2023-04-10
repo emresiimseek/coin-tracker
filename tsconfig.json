@@ -15,7 +15,11 @@
     "isolatedModules": true,
     "baseUrl": "./",
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "react-number-format": ["./node_modules/react-number-format"],
+      "*": ["node_modules/*"]
+    }
   },
   "include": ["src"]
 }
