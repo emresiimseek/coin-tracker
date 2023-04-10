@@ -36,13 +36,13 @@ function CoinTracker() {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
-  const [isMockData, setIsMockData] = useState<boolean>(false);
+  const [isMockData, setIsMockData] = useState<boolean>(true);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
     isMockData ? defaultArray() : []
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [symbols, setSymbol] = useState<Symbol[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const items = useMemo(() => symbols, [symbols]);
 
@@ -408,13 +408,19 @@ function CoinTracker() {
             InputProps={{
               inputComponent: NumericFormatCustom as any,
             }}
-            disabled={!params.row.fixedParibuLowestAsk}
             onChange={(event) => {
+              const getUnitPrice = () => {
+                if (!event.target.value || !params.row.fixedParibuLowestAsk)
+                  return "";
+
+                return +event.target.value / params.row.fixedParibuLowestAsk;
+              };
+
               updatePrice([
                 {
                   ...params.row,
                   paribuBuyPrice: event.target.value,
-                  unit: "",
+                  unit: getUnitPrice(),
                 },
               ]);
             }}
@@ -429,19 +435,23 @@ function CoinTracker() {
       type: "action",
       headerAlign: "center",
       flex: 1,
-      valueGetter: (params) => {},
-      renderCell: (params) => {
+      renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
         return (
           <TextField
-            disabled={!params.row.fixedParibuLowestAsk}
             value={params.row.unit}
             type="number"
             onChange={(event) => {
+              const getParibuBuyPrice = () => {
+                if (!event.target.value || !params.row.fixedParibuLowestAsk)
+                  return "";
+
+                return +event.target.value * params.row.fixedParibuLowestAsk;
+              };
               updatePrice([
                 {
                   ...params.row,
-                  unit: event.target.value,
-                  paribuBuyPrice: "",
+                  unit: event.target.value ?? "",
+                  paribuBuyPrice: getParibuBuyPrice(),
                 },
               ]);
             }}
@@ -486,6 +496,7 @@ function CoinTracker() {
             color="success"
             startIcon={<Add />}
             onClick={() => {
+              handleSelect([params.row.id]);
               const query = createQueryString({
                 paribuBuyPrice: params.row.paribuLowestAsk.toString(),
                 paribuSellPrice: params.row.paribuHighestBid.toString(),
@@ -593,16 +604,18 @@ function CoinTracker() {
                 (ei) => ei.symbol === params.row.symbolBinance
               );
 
+              const quantity = +(
+                params.row.unit
+                  ? +params.row.unit
+                  : Number(params.row.paribuBuyPrice) /
+                    +params.row.priceBinanceReal
+              ).toFixed(symbol?.quantityPrecision);
+
               createNewOrder({
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
-                quantity: +(
-                  params.row.unit
-                    ? +params.row.unit
-                    : Number(params.row.paribuBuyPrice) /
-                      +params.row.priceBinanceReal
-                ).toFixed(symbol?.quantityPrecision),
+                quantity,
                 price: params.row.priceBinanceReal.toString(),
               });
             }}
