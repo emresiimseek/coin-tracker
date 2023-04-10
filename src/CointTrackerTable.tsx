@@ -169,7 +169,7 @@ function CoinTracker() {
             const b3 = (Number(existingObj.fixedBinancePrice) ?? 0) * count;
             const kar = paribuProfit + (binanceProfit - b3) * -1;
 
-            existingObj.benefit = kar;
+            existingObj.benefit = Number.isNaN(kar) ? null : kar;
           }
 
           setIsLoading(false);
@@ -487,7 +487,9 @@ function CoinTracker() {
           : Number(params.row.paribuBuyPrice) /
               Number(params.row.fixedParibuLowestAsk) ?? 0;
 
-        return quantity * Number(params.row.fixedBinancePrice ?? 0);
+        const result = quantity * Number(params.row.fixedBinancePrice ?? 0);
+
+        return isNaN(result) ? "" : result;
       },
     },
     {
@@ -502,7 +504,7 @@ function CoinTracker() {
             color="success"
             startIcon={<Add />}
             onClick={() => {
-              handleSelect([params.row.id]);
+              handleSelect([params.row.id], "P");
               const query = createQueryString({
                 paribuBuyPrice: params.row.paribuLowestAsk.toString(),
                 paribuSellPrice: params.row.paribuHighestBid.toString(),
@@ -572,6 +574,8 @@ function CoinTracker() {
             color="success"
             startIcon={<Add />}
             onClick={() => {
+              handleSelect([params.row.id], "B");
+
               const symbol = symbols.find(
                 (ei) => ei.symbol === params.row.symbolBinance
               );
@@ -634,7 +638,7 @@ function CoinTracker() {
   ];
 
   const handleSelect = useCallback(
-    (newRowSelectionModel: GridRowSelectionModel) => {
+    (newRowSelectionModel: GridRowSelectionModel, type: "B" | "P" | "BP") => {
       selectedCoins.concat(newRowSelectionModel).forEach((nr) => {
         const currentIndex = combinedArray.findIndex((c) => c.id === nr);
 
@@ -646,14 +650,45 @@ function CoinTracker() {
           combinedArray[currentIndex].fixedBinancePrice = null;
           combinedArray[currentIndex].paribuBuyPrice = "";
         } else {
-          combinedArray[currentIndex].fixedParibuHighestBid =
-            data.paribuHighestBid;
-          combinedArray[currentIndex].fixedParibuLowestAsk =
-            data.paribuLowestAsk;
-          combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
-          combinedArray[currentIndex].paribuBuyPrice = (
-            Number(data.unit) * Number(data.paribuLowestAsk)
-          ).toString();
+          if (type === "P") {
+            combinedArray[currentIndex].fixedParibuHighestBid =
+              data.paribuHighestBid;
+            combinedArray[currentIndex].fixedParibuLowestAsk =
+              data.paribuLowestAsk;
+
+            const unit = data.unit
+              ? +data.unit
+              : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
+
+            combinedArray[currentIndex].paribuBuyPrice = (
+              unit * Number(data.paribuLowestAsk)
+            ).toString();
+          } else if (type === "B") {
+            combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
+            const unit = data.unit
+              ? +data.unit
+              : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
+
+            combinedArray[currentIndex].unit = (
+              Number(data.paribuBuyPrice) / Number(unit)
+            ).toString();
+          }
+
+          if (type === "BP") {
+            combinedArray[currentIndex].fixedParibuHighestBid =
+              data.paribuHighestBid;
+            combinedArray[currentIndex].fixedParibuLowestAsk =
+              data.paribuLowestAsk;
+
+            const unit = data.unit
+              ? +data.unit
+              : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
+
+            combinedArray[currentIndex].paribuBuyPrice = (
+              unit * Number(data.paribuLowestAsk)
+            ).toString();
+            combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
+          }
         }
 
         updatePrice([combinedArray[currentIndex]]);
@@ -686,7 +721,9 @@ function CoinTracker() {
         style={{ height: "98vh" }}
         checkboxSelection
         rowSelectionModel={selectedCoins}
-        onRowSelectionModelChange={handleSelect}
+        onRowSelectionModelChange={(rowSelectionModel) =>
+          handleSelect(rowSelectionModel, "BP")
+        }
         getRowClassName={(value) => {
           if (value.row.isBuy) return "buy";
           else if (
