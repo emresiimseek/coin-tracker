@@ -11,7 +11,6 @@ import { Symbol } from "@/types/ExchangeResponse";
 import axios from "axios";
 import { getExchange } from "../binance-api";
 import { QueryModel } from "@/types/QueryModel";
-import { GridColumns } from "../GridColumns";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
@@ -21,13 +20,13 @@ export const useCoinTracker = () => {
   const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
   const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
   const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
-  const [isMockData, setIsMockData] = useState<boolean>(true);
+  const [isMockData, setIsMockData] = useState<boolean>(false);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
     isMockData ? defaultArray() : []
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [symbols, setSymbol] = useState<Symbol[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>();
 
   const items = useMemo(() => symbols, [symbols]);
 
@@ -81,12 +80,14 @@ export const useCoinTracker = () => {
         );
         const data: CombinedCoin = {
           symbolBinance: binanceCoin.s,
-          priceBinance: Number(binanceCoin.c) * Number(usdttry?.c),
+          priceBinance: +(Number(binanceCoin.c) * Number(usdttry?.c)).toFixed(
+            symbol?.pricePrecision
+          ),
           symbolParibu: paribuCoin.symbol,
           paribuHighestBid: paribuCoin.highestBid,
           paribuLowestAsk: paribuCoin.lowestAsk,
           id: binanceCoin.s + paribuCoin.symbol,
-          priceBinanceReal: +binanceCoin.c,
+          binanceRealPrice: +binanceCoin.c,
           buyDiff,
           isBuy,
           sellDiff,
@@ -142,7 +143,7 @@ export const useCoinTracker = () => {
             existingObj.benefit = Number.isNaN(profit) ? null : profit;
           }
 
-          setIsLoading(false);
+          if (isLoading === true) setIsLoading(false);
         } else {
           newDataCopy.push(newObj);
           setIsLoading(true);
@@ -274,55 +275,39 @@ export const useCoinTracker = () => {
 
         const data = { ...combinedArray[currentIndex] };
 
+        const setBinance = () => {
+          combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
+          combinedArray[currentIndex].fixedBinanceRealPrice =
+            data.binanceRealPrice;
+        };
+
+        const setParibu = () => {
+          combinedArray[currentIndex].fixedParibuHighestBid =
+            data.paribuHighestBid;
+          combinedArray[currentIndex].fixedParibuLowestAsk =
+            data.paribuLowestAsk;
+
+          const unit = data.paribuUnit
+            ? +data.paribuUnit
+            : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
+
+          combinedArray[currentIndex].paribuBuyPrice =
+            +unit * Number(data.paribuLowestAsk);
+
+          combinedArray[currentIndex].paribuUnit = +unit;
+        };
+
         if (selectedCoins.includes(nr) && !newRowSelectionModel.includes(nr)) {
           combinedArray[currentIndex].fixedParibuHighestBid = null;
           combinedArray[currentIndex].fixedParibuLowestAsk = null;
           combinedArray[currentIndex].fixedBinancePrice = null;
-          combinedArray[currentIndex].paribuBuyPrice = 0;
+          combinedArray[currentIndex].paribuBuyPrice = null;
         } else {
-          if (type === "P") {
-            combinedArray[currentIndex].fixedParibuHighestBid =
-              data.paribuHighestBid;
-            combinedArray[currentIndex].fixedParibuLowestAsk =
-              data.paribuLowestAsk;
-
-            const unit = (
-              data.paribuUnit
-                ? +data.paribuUnit
-                : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk)
-            ).toFixed(6);
-
-            combinedArray[currentIndex].paribuBuyPrice =
-              +unit * Number(data.paribuLowestAsk);
-
-            combinedArray[currentIndex].paribuUnit = +unit;
-          } else if (type === "B") {
-            combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
-
-            const unit = (
-              data.binanceUnit
-                ? +Number(data.binanceUnit).toFixed(data.quantityPrecision)
-                : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk)
-            ).toFixed(6);
-
-            combinedArray[currentIndex].binanceUnit =
-              Number(data.paribuBuyPrice) / Number(unit);
-          }
-
-          if (type === "BP") {
-            combinedArray[currentIndex].fixedParibuHighestBid =
-              data.paribuHighestBid;
-            combinedArray[currentIndex].fixedParibuLowestAsk =
-              data.paribuLowestAsk;
-
-            const binanceUnit = data.binanceUnit
-              ? +Number(data.binanceUnit).toFixed(data?.quantityPrecision)
-              : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
-
-            combinedArray[currentIndex].paribuBuyPrice =
-              binanceUnit * Number(data.paribuLowestAsk);
-
-            combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
+          if (type === "P") setParibu();
+          else if (type === "B") setBinance();
+          else if (type === "BP") {
+            setBinance();
+            setParibu();
           }
         }
 
@@ -334,14 +319,11 @@ export const useCoinTracker = () => {
     [combinedArray, selectedCoins]
   );
 
-  const columns = useMemo(() => GridColumns, []);
-
   return {
     updatePrice,
     createQueryString,
     setSelectedCoins,
     handleSelect,
-    columns,
     isLoading,
     items,
     selectedCoins,

@@ -9,11 +9,13 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
+
 import { useState, memo } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Symbol } from "./types/ExchangeResponse";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { changeMarginType, setLeverageApi } from "./binance-api";
+import CloseIcon from "@mui/icons-material/Close";
 export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
   const [open, setOpen] = useState(false);
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
@@ -90,7 +92,7 @@ export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
   return (
     <>
       <IconButton onClick={handleOpen}>
-        <SettingsIcon />
+        <SettingsIcon style={{ marginLeft: 5 }} />
       </IconButton>
       <Modal
         open={open}
@@ -106,7 +108,6 @@ export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
               label="Kaldıraç Değeri"
               onChange={(event) => setLeverage(event.target.value)}
             />
-
             <Button
               variant="outlined"
               onClick={() =>
@@ -117,7 +118,6 @@ export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
             >
               Kaldıraç Ayarla
             </Button>
-
             <FormControl>
               <InputLabel id="demo-simple-select-autowidth-label">
                 Margin Tipi
@@ -140,7 +140,6 @@ export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
                 <MenuItem value={"CROSSED"}>CROSSED</MenuItem>
               </Select>
             </FormControl>
-
             <Button
               variant="outlined"
               onClick={() => {
@@ -151,6 +150,13 @@ export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
             >
               Margin Ayarla
             </Button>
+            <div
+              style={{ display: "flex", justifyContent: "flex-end", flex: 1 }}
+            >
+              <IconButton onClick={() => setOpen(false)}>
+                <CloseIcon sx={{ fontSize: 22, color: "black" }} />
+              </IconButton>
+            </div>
           </div>
 
           <DataGrid

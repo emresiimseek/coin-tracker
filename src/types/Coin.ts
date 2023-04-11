@@ -1,3 +1,5 @@
+import { GridRenderCellParams } from "@mui/x-data-grid";
+
 export interface BinanceCoins {
   e: string;
   E: number;
@@ -72,9 +74,13 @@ export interface CombinedCoin {
   fixedBinancePrice?: number | null;
   benefit?: number | null;
   paribuDiff: number;
-  priceBinanceReal: number;
+  binanceRealPrice: number;
+  fixedBinanceRealPrice?: number;
   paribuUnit?: number;
   binanceUnit?: number;
   paribuBuyPrice?: number | null;
+  binanceBuyPrice?: number | null;
   quantityPrecision?: number;
 }
+
+export type Params = GridRenderCellParams<CombinedCoin, any, any>;
