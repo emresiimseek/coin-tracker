@@ -1,4 +1,6 @@
-export const defaultArray = () => [
+import { CombinedCoin } from "@/types/Coin";
+
+export const defaultArray = (): CombinedCoin[] => [
   {
     symbolBinance: "BCHUSDT",
     priceBinance: 2512.938,
@@ -10,10 +12,9 @@ export const defaultArray = () => [
     isBuy: false,
     sellDiff: -0.018,
     paribuDiff: 0.038,
-    benefit: null,
-    priceBinanceReal: "1",
-    unit: "",
-    paribuBuyPrice: "",
+    benefit: 1,
+    priceBinanceReal: 1,
+    paribuBuyPrice: 0,
   },
   {
     symbolBinance: "XLMUSDT",
@@ -26,10 +27,9 @@ export const defaultArray = () => [
     isBuy: false,
     sellDiff: 0.091,
     paribuDiff: -0.088,
-    benefit: null,
-    priceBinanceReal: "1",
-    unit: "",
-    paribuBuyPrice: "",
+    benefit: 1,
+    priceBinanceReal: 1,
+    paribuBuyPrice: 1,
   },
   {
     symbolBinance: "XTZUSDT",
@@ -42,10 +42,7 @@ export const defaultArray = () => [
     isBuy: false,
     sellDiff: 1.891,
     paribuDiff: -1.875,
-    benefit: null,
-    priceBinanceReal: "1",
-    unit: "",
-    paribuBuyPrice: "",
+    priceBinanceReal: 1,
   },
   {
     symbolBinance: "BATUSDT",
@@ -58,10 +55,8 @@ export const defaultArray = () => [
     isBuy: false,
     sellDiff: 0.51,
     paribuDiff: -0.462,
-    benefit: null,
-    priceBinanceReal: "1",
-    unit: "",
-    paribuBuyPrice: "",
+    paribuBuyPrice: 1,
+    priceBinanceReal: 1,
   },
   {
     symbolBinance: "ZILUSDT",
@@ -74,9 +69,6 @@ export const defaultArray = () => [
     isBuy: false,
     sellDiff: 0.459,
     paribuDiff: -0.341,
-    benefit: null,
-    priceBinanceReal: "1",
-    unit: "",
-    paribuBuyPrice: "",
+    priceBinanceReal: 1,
   },
 ];

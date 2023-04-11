@@ -18,7 +18,8 @@
     "jsx": "react-jsx",
     "paths": {
       "react-number-format": ["./node_modules/react-number-format"],
-      "*": ["node_modules/*"]
+      "*": ["node_modules/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]
