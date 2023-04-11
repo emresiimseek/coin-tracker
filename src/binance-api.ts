@@ -12,7 +12,7 @@ const proxyMarginTypeEndpoint = "margin";
 
 export const createNewOrder = async (request: BinanceOrderRequest) => {
   request.timestamp = Date.now();
-  const queryString = `symbol=${request.symbol}&price=${request.price}&quantity=${request.quantity}&side=${request.side}&timestamp=${request.timestamp}&type=${request.type}&timeInForce=GTC`;
+  const queryString = `symbol=${request.symbol}&price=${request.price}&quantity=${request.quantity}&side=${request.side}&timestamp=${request.timestamp}&type=${request.type}&timeInForce=GTC&positionSide=${request.positionSide}`;
 
   const signature = CryptoES.HmacSHA256(
     queryString,

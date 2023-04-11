@@ -354,12 +354,17 @@ function CoinTracker() {
             onClick={() => {
               handleSelect([params.row.id], "B");
 
+              if (!params.row.binanceUnit) {
+                alert("Binance için birim giriniz!");
+                return;
+              }
+
               const quantity = +(
                 params.row.binanceUnit
                   ? +Number(params.row.binanceUnit).toFixed(
                       params.row.quantityPrecision
                     )
-                  : Number(params.row.paribuBuyPrice) /
+                  : Number(params.row.binanceBuyPrice) /
                     Number(params.row.fixedBinanceRealPrice)
               ).toFixed(params.row.quantityPrecision);
 
@@ -369,6 +374,7 @@ function CoinTracker() {
                 type: "LIMIT",
                 quantity,
                 price: params.row?.fixedBinanceRealPrice?.toString(),
+                positionSide: "BOTH",
               });
             }}
           >
@@ -401,10 +407,11 @@ function CoinTracker() {
 
               createNewOrder({
                 symbol: params.row.symbolBinance,
-                side: "BUY",
+                side: "SELL",
                 type: "LIMIT",
                 quantity,
                 price: params.row?.fixedBinanceRealPrice?.toString(),
+                positionSide: "BOTH",
               });
             }}
           >
