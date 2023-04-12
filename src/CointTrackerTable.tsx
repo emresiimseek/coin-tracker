@@ -15,7 +15,7 @@ import { Button, TextField } from "@mui/material";
 import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
 import { createNewOrder } from "./binance-api";
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 
 function CoinTracker() {
   const {
@@ -126,8 +126,8 @@ function CoinTracker() {
         return (
           <TextField
             value={params.row.paribuUnit}
-            type="number"
             size="small"
+            InputProps={AmountInput}
             onChange={(event) => {
               const getParibuBuyPrice = () => {
                 if (!event.target.value || !params.row.fixedParibuLowestAsk)
@@ -161,9 +161,8 @@ function CoinTracker() {
           <TextField
             size="small"
             value={params.row.paribuBuyPrice}
-            InputProps={{
-              inputComponent: NumericFormatCustom as any,
-            }}
+            prefix="₺"
+            InputProps={PriceInput}
             onChange={(event) => {
               const getUnitPrice = () => {
                 if (!event.target.value || !params.row.fixedParibuLowestAsk)
@@ -218,8 +217,8 @@ function CoinTracker() {
         return (
           <TextField
             value={params.row.binanceUnit}
-            type="number"
             size="small"
+            InputProps={AmountInput}
             onChange={(event) => {
               const getBinanceBuyPrice = () => {
                 if (!event.target.value || !params.row.fixedBinancePrice)
@@ -432,6 +431,25 @@ function CoinTracker() {
       ),
 
     [items]
+  );
+
+  const NumericFormat = useMemo(
+    () => (props: any, prefix?: string) =>
+      <NumericFormatCustom {...props} prefix={prefix} />,
+    []
+  );
+
+  const PriceInput = useMemo(
+    () => ({
+      inputComponent: (props: any) => NumericFormat(props, "₺"),
+    }),
+    []
+  );
+  const AmountInput = useMemo(
+    () => ({
+      inputComponent: (props: any) => NumericFormat(props),
+    }),
+    []
   );
 
   return (

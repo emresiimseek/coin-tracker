@@ -3,28 +3,28 @@ import { NumericFormat, NumericFormatProps } from "react-number-format";
 
 interface CustomProps {
   onChange: (event: { target: { value: string } }) => void;
+  prefix?: string;
 }
 
 export const NumericFormatCustom = forwardRef<NumericFormatProps, CustomProps>(
   function NumericFormatCustom(props, ref) {
-    const { onChange, ...other } = props;
+    const { onChange, prefix, ...other } = props;
 
     return (
       <NumericFormat
         {...other}
+        prefix={prefix}
         getInputRef={ref}
         onValueChange={(values: any) => {
-          console.log(values);
-
           onChange({
             target: {
               value: values.value,
             },
           });
         }}
-        thousandSeparator
         valueIsNumericString
-        prefix="₺"
+        decimalSeparator=","
+        thousandSeparator="."
       />
     );
   }
