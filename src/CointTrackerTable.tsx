@@ -628,14 +628,11 @@ function CoinTracker() {
       <DataGrid
         slots={{
           loadingOverlay: LinearProgress,
+          footer: Footer,
         }}
         rows={combinedArray}
         loading={isLoading}
-        scrollbarSize={20}
         disableRowSelectionOnClick
-        components={{
-          Footer,
-        }}
         columns={columns}
         density="standard"
         style={{
