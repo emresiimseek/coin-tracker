@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import { toast } from "react-toastify";
 
 function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
   const [username, setUsername] = useState("");
@@ -21,10 +22,14 @@ function LoginScreen({ onLogin }: { onLogin: (value: boolean) => void }) {
       username === process.env.REACT_APP_USER_NAME &&
       password === process.env.REACT_APP_PASSWORD
     ) {
-      console.log("Başarılı");
+      toast("Başarılı", { type: "success", position: "top-center" });
       sessionStorage.setItem("isLogin", "true");
       onLogin(true);
-    } else alert("Kullanıcı adı veya şifre yanlış.");
+    } else
+      toast("Kullanıcı adı veya parola yanlış.", {
+        type: "error",
+        position: "top-center",
+      });
   };
 
   return (

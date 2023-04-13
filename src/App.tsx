@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import CoinTracker from "./CointTrackerTable";
 import LoginScreen from "./Login";
 import "./App.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [isLogin, setIsLogin] = useState<boolean>(false);
@@ -11,12 +13,16 @@ function App() {
     setIsLogin(!!data);
   }, []);
 
-  const AppComponent = () =>
-    isLogin ? (
-      <CoinTracker />
-    ) : (
-      <LoginScreen onLogin={(value) => setIsLogin(value)} />
-    );
+  const AppComponent = () => (
+    <>
+      <ToastContainer />
+      {isLogin ? (
+        <CoinTracker />
+      ) : (
+        <LoginScreen onLogin={(value) => setIsLogin(value)} />
+      )}
+    </>
+  );
 
   return <AppComponent />;
 }

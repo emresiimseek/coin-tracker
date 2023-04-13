@@ -17,6 +17,7 @@ import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
 import { createNewOrder } from "./binance-api";
 import React, { forwardRef, useMemo } from "react";
+import { toast } from "react-toastify";
 
 function CoinTracker() {
   const {
@@ -257,7 +258,11 @@ function CoinTracker() {
           params.row.quantityPrecision
         );
 
-        const result = (quantity * Number(params.row?.fixedBinancePrice)) / 3;
+        const price = params.row?.fixedBinancePrice
+          ? params.row?.fixedBinancePrice
+          : params.row.priceBinance;
+
+        const result = (quantity * Number(price)) / 3;
 
         return isNaN(result) ? "" : result;
       },
@@ -276,7 +281,11 @@ function CoinTracker() {
             size="small"
             onClick={() => {
               if (!params.row.paribuUnit && !params.row.paribuBuyPrice) {
-                alert("Toplam tutar giriniz!");
+                toast("Toplam tutar giriniz!", {
+                  type: "info",
+                  position: "top-center",
+                  autoClose: 1000,
+                });
                 return;
               }
 
@@ -317,7 +326,11 @@ function CoinTracker() {
             size="small"
             onClick={() => {
               if (!params.row.paribuUnit && !params.row.paribuBuyPrice) {
-                alert("Toplam tutar giriniz!");
+                toast("Toplam tutar giriniz!", {
+                  type: "info",
+                  position: "top-center",
+                  autoClose: 1000,
+                });
                 return;
               }
 
@@ -358,7 +371,11 @@ function CoinTracker() {
             color="success"
             onClick={() => {
               if (!params.row.binanceUnit) {
-                alert("Miktar giriniz!");
+                toast("Miktar giriniz!", {
+                  type: "info",
+                  position: "top-center",
+                  autoClose: 1000,
+                });
                 return;
               }
 
@@ -416,7 +433,7 @@ function CoinTracker() {
                     Number(params.row?.fixedBinanceRealPrice)
               ).toFixed(params.row.quantityPrecision);
 
-              const result = await createNewOrder({
+              await createNewOrder({
                 symbol: params.row.symbolBinance,
                 side: "BUY",
                 type: "LIMIT",
@@ -425,23 +442,19 @@ function CoinTracker() {
                 positionSide: "BOTH",
               });
 
-              if (result.success) {
-                setSelectedCoins(
-                  selectedCoins.filter((c) => c != params.row.id)
-                );
+              // setSelectedCoins(selectedCoins.filter((c) => c != params.row.id));
 
-                updatePrice([
-                  {
-                    ...params.row,
-                    fixedBinancePrice: null,
-                    fixedBinanceRealPrice: null,
-                    fixedParibuHighestBid: null,
-                    fixedParibuLowestAsk: null,
-                    paribuBuyPrice: null,
-                    binanceBuyPrice: null,
-                  },
-                ]);
-              }
+              // updatePrice([
+              //   {
+              //     ...params.row,
+              //     fixedBinancePrice: null,
+              //     fixedBinanceRealPrice: null,
+              //     fixedParibuHighestBid: null,
+              //     fixedParibuLowestAsk: null,
+              //     paribuBuyPrice: null,
+              //     binanceBuyPrice: null,
+              //   },
+              // ]);
             }}
           >
             Long

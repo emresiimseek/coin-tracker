@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from "axios";
 import { BinanceOrderRequest } from "./types/BinanceOrderRequest";
 import CryptoES from "crypto-es";
 import { ExchangeInfo } from "./types/ExchangeResponse";
+import { toast } from "react-toastify";
 
 const baseUrl = "https://fapi.binance.com";
 const endpoint = "fapi/v1/order";
@@ -19,8 +20,8 @@ export const createNewOrder = async (request: BinanceOrderRequest) => {
     process.env.REACT_APP_API_SECRET ?? ""
   ).toString(CryptoES.enc.Hex);
 
-  try {
-    const response = await axios.post(
+  toast.promise(
+    axios.post(
       `${baseUrl}/${endpoint}?${queryString}&signature=${signature}`,
       null,
       {
@@ -28,18 +29,18 @@ export const createNewOrder = async (request: BinanceOrderRequest) => {
           "X-MBX-APIKEY": process.env.REACT_APP_API_KEY ?? "",
         },
       }
-    );
-
-    alert(`Başarılı! (${response.data.symbol})`);
-    return { data: response.data, success: true };
-  } catch (error: any) {
-    alert(error.response.data.msg);
-
-    return {
-      success: false,
-      error: { ...error.response.data },
-    };
-  }
+    ),
+    {
+      pending: "İşlem devam ediyor...",
+      success: "Başarılı!",
+      error: {
+        render({ data }) {
+          return (data as any).response.data.msg;
+        },
+      },
+    },
+    { position: "top-center" }
+  );
 };
 
 export const getExchange = async () => {
@@ -64,15 +65,27 @@ export const setLeverageApi = (symbol: string, leverage: string = "3") => {
     process.env.REACT_APP_API_SECRET ?? ""
   ).toString(CryptoES.enc.Hex);
 
-  axios.post(
-    `${proxyBaseUrl}${proxyLeverageEndpoint}?${queryString}&signature=${signature}`,
-    null,
+  toast.promise(
+    axios.post(
+      `${proxyBaseUrl}${proxyLeverageEndpoint}?${queryString}&signature=${signature}`,
+      null,
+      {
+        headers: {
+          "X-MBX-APIKEY": process.env.REACT_APP_API_KEY ?? "",
+          rejectUnauthorized: false,
+        },
+      }
+    ),
     {
-      headers: {
-        "X-MBX-APIKEY": process.env.REACT_APP_API_KEY ?? "",
-        rejectUnauthorized: false,
+      pending: "İşlem devam ediyor...",
+      success: "Başarılı!",
+      error: {
+        render({ data }) {
+          return (data as any).response.data.msg;
+        },
       },
-    }
+    },
+    { position: "top-center" }
   );
 };
 
@@ -89,14 +102,26 @@ export const changeMarginType = (
     process.env.REACT_APP_API_SECRET ?? ""
   ).toString(CryptoES.enc.Hex);
 
-  axios.post(
-    `${proxyBaseUrl}${proxyMarginTypeEndpoint}?${queryString}&signature=${signature}`,
-    null,
+  toast.promise(
+    axios.post(
+      `${proxyBaseUrl}${proxyMarginTypeEndpoint}?${queryString}&signature=${signature}`,
+      null,
+      {
+        headers: {
+          "X-MBX-APIKEY": process.env.REACT_APP_API_KEY ?? "",
+          rejectUnauthorized: false,
+        },
+      }
+    ),
     {
-      headers: {
-        "X-MBX-APIKEY": process.env.REACT_APP_API_KEY ?? "",
-        rejectUnauthorized: false,
+      pending: "İşlem devam ediyor...",
+      success: "Başarılı!",
+      error: {
+        render({ data }) {
+          return (data as any).response.data.msg;
+        },
       },
-    }
+    },
+    { position: "top-center" }
   );
 };
