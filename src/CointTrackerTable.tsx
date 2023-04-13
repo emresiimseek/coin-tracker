@@ -12,7 +12,13 @@ import SettingsModal from "./SettingsModal";
 import { useCoinTracker } from "./hooks/useCoinTracker";
 import { CustomHeader } from "./CustomHeader";
 import { CombinedCoin, Params } from "./types/Coin";
-import { Button, IconButton, InputAdornment, TextField } from "@mui/material";
+import {
+  Button,
+  IconButton,
+  InputAdornment,
+  LinearProgress,
+  TextField,
+} from "@mui/material";
 import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
 import { createNewOrder } from "./binance-api";
@@ -577,6 +583,9 @@ function CoinTracker() {
       style={{ maxWidth: "100vw", height: "100vh" }}
     >
       <DataGrid
+        slots={{
+          loadingOverlay: LinearProgress,
+        }}
         rows={combinedArray}
         loading={isLoading}
         scrollbarSize={20}
