@@ -43,6 +43,7 @@ function CoinTracker() {
     {
       field: "symbolParibu",
       headerName: "Sembol",
+      minWidth: 80,
       description: "Sembol",
       headerAlign: "center",
       renderCell: (params) => <strong>{params.row.symbolParibu}</strong>,
@@ -51,7 +52,8 @@ function CoinTracker() {
 
     {
       field: "paribuHighestBid",
-      headerName: "Satış F.",
+      headerName: "Satış Fi.",
+      minWidth: 80,
       flex: 0.6,
       description: "Paribu Satış Fiyat",
       headerAlign: "center",
@@ -60,7 +62,8 @@ function CoinTracker() {
     },
     {
       field: "paribuLowestAsk",
-      headerName: "Alış F.",
+      headerName: "Alış Fi.",
+      minWidth: 80,
       flex: 0.6,
       description: "Paribu Alış Fiyat",
       headerAlign: "center",
@@ -70,6 +73,7 @@ function CoinTracker() {
     {
       field: "paribuDiff",
       headerName: "Makas",
+      minWidth: 80,
       headerAlign: "center",
       type: "number",
       flex: 0.6,
@@ -79,9 +83,10 @@ function CoinTracker() {
     },
     {
       field: "buyDiff",
-      headerName: "Alış F.(%)",
+      headerName: "Alış Fa.(%)",
+      minWidth: 80,
       type: "number",
-      flex: 0.7,
+      flex: 0.8,
       headerAlign: "center",
       description: "Alış Yüzde Fark",
       renderHeader: (params: GridColumnHeaderParams) =>
@@ -89,10 +94,11 @@ function CoinTracker() {
     },
     {
       field: "sellDiff",
-      headerName: "Satış F.(%)",
+      headerName: "Satış Fa.(%)",
+      minWidth: 80,
       type: "number",
       headerAlign: "center",
-      flex: 0.7,
+      flex: 0.8,
       description: "Satış Yüzde Fark",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params),
@@ -100,6 +106,7 @@ function CoinTracker() {
     {
       field: "fixedParibuLowestAsk",
       headerName: "SPA",
+      minWidth: 80,
       description: "Sabit Alış F.",
       type: "number",
       headerAlign: "center",
@@ -110,6 +117,7 @@ function CoinTracker() {
     {
       field: "fixedParibuHighestBid",
       headerName: "SPS",
+      minWidth: 80,
       description: "Sabit Satış F.",
       type: "number",
       headerAlign: "center",
@@ -121,6 +129,7 @@ function CoinTracker() {
     {
       field: "paribuAmount",
       headerName: "Miktar",
+      minWidth: 80,
       description: "Miktar",
       headerAlign: "center",
       flex: 0.8,
@@ -178,6 +187,7 @@ function CoinTracker() {
     {
       field: "paribuBuyPrice",
       headerName: "Toplam (₺)",
+      minWidth: 80,
       description: "Paribu Toplam",
       flex: 0.8,
       headerAlign: "center",
@@ -227,11 +237,11 @@ function CoinTracker() {
         );
       },
     },
-
     {
       field: "priceBinance",
-      headerName: "Fiyat",
-      flex: 0.6,
+      headerName: "Fiyat(₺)",
+      minWidth: 80,
+      flex: 0.7,
       type: "number",
       headerAlign: "center",
       description: "Binance Fiyat",
@@ -239,8 +249,23 @@ function CoinTracker() {
         CustomHeader("b", params),
     },
     {
+      field: "binanceRealPrice",
+      headerName: "Fiyat($)",
+      minWidth: 80,
+      resizable: true,
+      flex: 0.7,
+      type: "number",
+      headerAlign: "center",
+      description: "Binance Fiyat",
+      valueFormatter: (params) =>
+        numericFormatter(params.value.toString(), { prefix: "$" }),
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("b", params),
+    },
+    {
       field: "fixedBinancePrice",
       headerName: "SBF",
+      minWidth: 80,
       description: "Sabit Fiyat",
       type: "number",
       headerAlign: "center",
@@ -251,6 +276,7 @@ function CoinTracker() {
     {
       field: "binanceAmount",
       headerName: "Miktar",
+      minWidth: 80,
       description: "Miktar",
       type: "action",
       headerAlign: "center",
@@ -313,6 +339,7 @@ function CoinTracker() {
       field: "binanceTotalPrice",
       headerName: "Toplam(₺)",
       hideSortIcons: true,
+      minWidth: 80,
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params),
       type: "number",
@@ -324,7 +351,7 @@ function CoinTracker() {
           decimalScale: 3,
         }),
       description: "Binance Alış Tutarı",
-      flex: 0.7,
+      flex: 0.8,
       valueGetter: (params: Params) => {
         if (!params.row.binanceUnit && !params.row.fixedBinancePrice) return "";
 
@@ -344,6 +371,7 @@ function CoinTracker() {
     {
       field: "benefit",
       headerName: "Kar",
+      minWidth: 80,
       description: "Kar",
       headerAlign: "center",
       type: "number",
@@ -351,7 +379,8 @@ function CoinTracker() {
     },
     {
       field: "paribuBuy",
-      flex: 0.5,
+      minWidth: 77,
+      maxWidth: 77,
       headerAlign: "center",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params, true),
@@ -360,6 +389,10 @@ function CoinTracker() {
           <Button
             variant="contained"
             color="success"
+            sx={{
+              paddingRight: 0,
+              paddingLeft: 0,
+            }}
             size="small"
             onClick={() => {
               if (!params.row.paribuUnit && !params.row.paribuBuyPrice) {
@@ -397,7 +430,8 @@ function CoinTracker() {
     },
     {
       field: "paribuSell",
-      flex: 0.5,
+      minWidth: 75,
+      maxWidth: 75,
       headerAlign: "center",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params, true),
@@ -405,6 +439,10 @@ function CoinTracker() {
         return (
           <Button
             variant="contained"
+            sx={{
+              paddingRight: 0,
+              paddingLeft: 0,
+            }}
             color="warning"
             size="small"
             onClick={() => {
@@ -441,16 +479,20 @@ function CoinTracker() {
     },
     {
       field: "binanceBuy",
-      flex: 0.5,
       headerAlign: "center",
+      minWidth: 75,
+      maxWidth: 75,
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params, true),
       renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
         return (
-          <LoadingButton
-            loading={loading}
+          <Button
             variant="contained"
             size="small"
+            sx={{
+              paddingRight: 0,
+              paddingLeft: 0,
+            }}
             color="success"
             onClick={() => {
               if (!params.row.binanceUnit) {
@@ -461,8 +503,6 @@ function CoinTracker() {
                 });
                 return;
               }
-
-              setLoading(true);
 
               handleSelect([params.row.id], "B");
 
@@ -483,19 +523,18 @@ function CoinTracker() {
                 price: params.row?.fixedBinanceRealPrice?.toString(),
                 positionSide: "BOTH",
               });
-
-              setLoading(false);
             }}
           >
             Short
-          </LoadingButton>
+          </Button>
         );
       },
     },
     {
       field: "binanceSell",
-      flex: 0.5,
       headerAlign: "center",
+      minWidth: 80,
+      maxWidth: 80,
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params, true),
       renderCell: (params: Params) => {
@@ -504,6 +543,10 @@ function CoinTracker() {
             variant="contained"
             color="warning"
             size="small"
+            sx={{
+              paddingRight: 0,
+              paddingLeft: 0,
+            }}
             onClick={async () => {
               handleSelect([params.row.id], "B");
 

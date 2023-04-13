@@ -140,7 +140,9 @@ export const useCoinTracker = () => {
       const selectedCoinsSet = new Set(selectedCoins);
       const allCoins = [
         ...newDataCopy.filter((x) => selectedCoinsSet.has(x.id)),
-        ...newDataCopy.filter((x) => x.isBuy && !selectedCoinsSet.has(x.id)),
+        ...newDataCopy
+          .filter((x) => x.isBuy && !selectedCoinsSet.has(x.id))
+          .sort((x, y) => y.paribuDiff - x.paribuDiff),
         ...newDataCopy.filter((x) => !x.isBuy && !selectedCoinsSet.has(x.id)),
       ];
 
