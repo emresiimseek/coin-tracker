@@ -20,7 +20,7 @@ export const createNewOrder = async (request: BinanceOrderRequest) => {
   ).toString(CryptoES.enc.Hex);
 
   try {
-    await axios.post(
+    const response = await axios.post(
       `${baseUrl}/${endpoint}?${queryString}&signature=${signature}`,
       null,
       {
@@ -29,8 +29,16 @@ export const createNewOrder = async (request: BinanceOrderRequest) => {
         },
       }
     );
+
+    alert(`Başarılı! (${response.data.symbol})`);
+    return { data: response.data, success: true };
   } catch (error: any) {
     alert(error.response.data.msg);
+
+    return {
+      success: false,
+      error: { ...error.response.data },
+    };
   }
 };
 

@@ -28,22 +28,9 @@ export const useCoinTracker = () => {
   const [symbols, setSymbol] = useState<Symbol[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>();
 
+  const [loading, setLoading] = useState(false);
+
   const items = useMemo(() => symbols, [symbols]);
-
-  useEffect(() => {
-    // Open a new window with the URL
-    if (!selectedCoins.length) return;
-
-    const sc = selectedCoins.at(selectedCoins.length - 1);
-
-    const currentIndex = combinedArray.findIndex((c) => c.id === sc);
-
-    const data = { ...combinedArray[currentIndex] };
-
-    // window.open(
-    //   `https://www.paribu.com/markets/${data.symbolParibu.toLowerCase()}?view=classic`
-    // );
-  }, [selectedCoins]);
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
@@ -104,7 +91,7 @@ export const useCoinTracker = () => {
     return mergedArray.filter((item) => item) as CombinedCoin[];
   }
 
-  const updatePrice = (prices: any[]) => {
+  const updatePrice = (prices: CombinedCoin[]) => {
     setCombinedArray((prevData) => {
       let newDataCopy = [...prevData];
 
@@ -150,10 +137,16 @@ export const useCoinTracker = () => {
         }
       });
 
-      return [
-        ...newDataCopy.filter((x) => x.isBuy),
-        ...newDataCopy.filter((x) => !x.isBuy),
+      const selectedCoinsSet = new Set(selectedCoins);
+      const allCoins = [
+        ...newDataCopy.filter((x) => selectedCoinsSet.has(x.id)),
+        ...newDataCopy.filter((x) => x.isBuy && !selectedCoinsSet.has(x.id)),
+        ...newDataCopy.filter((x) => !x.isBuy && !selectedCoinsSet.has(x.id)),
       ];
+
+      sessionStorage.setItem("coins", JSON.stringify(allCoins));
+
+      return allCoins;
     });
   };
 
@@ -204,10 +197,40 @@ export const useCoinTracker = () => {
     setSymbol(data as Symbol[]);
   };
 
-  // mounted hook
+  const handleBeforeUnload = (ev: any) => {
+    ev.preventDefault();
 
+    const confirmationMessage = "Are you sure you want to exit?";
+
+    ev.returnValue = "Are you sure you want to exit?";
+
+    return confirmationMessage;
+  };
+
+  // mounted hook
   useEffect(() => {
     getExchangeData();
+
+    const coins = sessionStorage.getItem("coins");
+
+    if (coins) {
+      let coinsData = JSON.parse(coins) as CombinedCoin[];
+
+      coinsData = coinsData.map((c) => ({
+        ...c,
+        fixedBinancePrice: null,
+        fixedBinanceRealPrice: null,
+        fixedParibuHighestBid: null,
+        fixedParibuLowestAsk: null,
+        paribuBuyPrice: null,
+        binanceBuyPrice: null,
+        isBuy: false,
+      }));
+
+      if (coinsData.length) setCombinedArray(coinsData);
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     const interval = setInterval(() => {
       if (!isMockData) getParibuPrice();
@@ -253,6 +276,7 @@ export const useCoinTracker = () => {
       binanceFSSocket.close();
       binanceSocket.close();
       clearInterval(interval);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
 
@@ -293,15 +317,15 @@ export const useCoinTracker = () => {
 
           combinedArray[currentIndex].paribuBuyPrice =
             +unit * Number(data.paribuLowestAsk);
-
-          combinedArray[currentIndex].paribuUnit = +unit;
         };
 
         if (selectedCoins.includes(nr) && !newRowSelectionModel.includes(nr)) {
           combinedArray[currentIndex].fixedParibuHighestBid = null;
           combinedArray[currentIndex].fixedParibuLowestAsk = null;
           combinedArray[currentIndex].fixedBinancePrice = null;
-          combinedArray[currentIndex].paribuBuyPrice = null;
+          combinedArray[currentIndex].paribuBuyPrice = 0;
+          combinedArray[currentIndex].binanceBuyPrice = null;
+          combinedArray[currentIndex].fixedBinanceRealPrice = null;
         } else {
           if (type === "P") setParibu();
           else if (type === "B") setBinance();
@@ -324,9 +348,11 @@ export const useCoinTracker = () => {
     createQueryString,
     setSelectedCoins,
     handleSelect,
+    setLoading,
     isLoading,
     items,
     selectedCoins,
     combinedArray,
+    loading,
   };
 };

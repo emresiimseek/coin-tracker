@@ -7,6 +7,7 @@ import {
   GridRenderCellParams,
   GridValueFormatterParams,
 } from "@mui/x-data-grid";
+import { LoadingButton } from "@mui/lab";
 import SettingsModal from "./SettingsModal";
 import { useCoinTracker } from "./hooks/useCoinTracker";
 import { CustomHeader } from "./CustomHeader";
@@ -15,7 +16,7 @@ import { Button, TextField } from "@mui/material";
 import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
 import { createNewOrder } from "./binance-api";
-import React, { useCallback, useMemo } from "react";
+import React, { forwardRef, useMemo } from "react";
 
 function CoinTracker() {
   const {
@@ -23,9 +24,12 @@ function CoinTracker() {
     isLoading,
     items,
     selectedCoins,
+    setSelectedCoins,
     handleSelect,
     createQueryString,
     updatePrice,
+    loading,
+    setLoading,
   } = useCoinTracker();
 
   const columns: GridColDef[] = [
@@ -131,14 +135,14 @@ function CoinTracker() {
             onChange={(event) => {
               const getParibuBuyPrice = () => {
                 if (!event.target.value || !params.row.fixedParibuLowestAsk)
-                  return "";
+                  return null;
 
                 return +event.target.value * params.row.fixedParibuLowestAsk;
               };
               updatePrice([
                 {
                   ...params.row,
-                  paribuUnit: event.target.value,
+                  paribuUnit: +event.target.value,
                   paribuBuyPrice: getParibuBuyPrice(),
                 },
               ]);
@@ -164,18 +168,10 @@ function CoinTracker() {
             prefix="₺"
             InputProps={PriceInput}
             onChange={(event) => {
-              const getUnitPrice = () => {
-                if (!event.target.value || !params.row.fixedParibuLowestAsk)
-                  return "";
-
-                return +event.target.value / params.row.fixedParibuLowestAsk;
-              };
-
               updatePrice([
                 {
                   ...params.row,
-                  paribuBuyPrice: event.target.value,
-                  paribuUnit: getUnitPrice(),
+                  paribuBuyPrice: +event.target.value,
                 },
               ]);
             }}
@@ -222,14 +218,14 @@ function CoinTracker() {
             onChange={(event) => {
               const getBinanceBuyPrice = () => {
                 if (!event.target.value || !params.row.fixedBinancePrice)
-                  return "";
+                  return null;
 
                 return +event.target.value * params.row.fixedBinancePrice;
               };
               updatePrice([
                 {
                   ...params.row,
-                  binanceUnit: event.target.value,
+                  binanceUnit: +event.target.value,
                   binanceBuyPrice: getBinanceBuyPrice(),
                 },
               ]);
@@ -240,7 +236,7 @@ function CoinTracker() {
     },
     {
       field: "binanceTotalPrice",
-      headerName: "Toplam($)",
+      headerName: "Toplam(₺)",
       hideSortIcons: true,
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params),
@@ -249,7 +245,7 @@ function CoinTracker() {
       valueFormatter: (params: GridValueFormatterParams) =>
         numericFormatter(params.value.toString(), {
           thousandSeparator: true,
-          prefix: "$",
+          prefix: "₺",
           decimalScale: 3,
         }),
       description: "Binance Alış Tutarı",
@@ -261,7 +257,7 @@ function CoinTracker() {
           params.row.quantityPrecision
         );
 
-        const result = quantity * Number(params.row?.fixedBinanceRealPrice);
+        const result = (quantity * Number(params.row?.fixedBinancePrice)) / 3;
 
         return isNaN(result) ? "" : result;
       },
@@ -279,7 +275,13 @@ function CoinTracker() {
             color="success"
             size="small"
             onClick={() => {
+              if (!params.row.paribuUnit && !params.row.paribuBuyPrice) {
+                alert("Toplam tutar giriniz!");
+                return;
+              }
+
               handleSelect([params.row.id], "P");
+
               const query = createQueryString({
                 paribuBuyPrice: params.row.paribuLowestAsk.toString(),
                 paribuSellPrice: params.row.paribuHighestBid.toString(),
@@ -314,6 +316,11 @@ function CoinTracker() {
             color="warning"
             size="small"
             onClick={() => {
+              if (!params.row.paribuUnit && !params.row.paribuBuyPrice) {
+                alert("Toplam tutar giriniz!");
+                return;
+              }
+
               const query = createQueryString({
                 paribuBuyPrice: params.row.paribuLowestAsk.toString(),
                 paribuSellPrice: params.row.paribuHighestBid.toString(),
@@ -322,11 +329,9 @@ function CoinTracker() {
                   ? +params.row.paribuUnit
                   : Number(params.row.paribuBuyPrice) /
                     params.row.paribuLowestAsk
-                ).toFixed(1),
+                ).toFixed(6),
                 type: "sell",
               });
-
-              console.log(query);
 
               window.open(
                 `https://www.paribu.com/markets/${params.row.symbolParibu.toLowerCase()}?${query}`
@@ -346,17 +351,20 @@ function CoinTracker() {
         CustomHeader("b", params, true),
       renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
         return (
-          <Button
+          <LoadingButton
+            loading={loading}
             variant="contained"
             size="small"
             color="success"
             onClick={() => {
-              handleSelect([params.row.id], "B");
-
               if (!params.row.binanceUnit) {
-                alert("Binance için birim giriniz!");
+                alert("Miktar giriniz!");
                 return;
               }
+
+              setLoading(true);
+
+              handleSelect([params.row.id], "B");
 
               const quantity = +(
                 params.row.binanceUnit
@@ -369,16 +377,18 @@ function CoinTracker() {
 
               createNewOrder({
                 symbol: params.row.symbolBinance,
-                side: "BUY",
+                side: "SELL",
                 type: "LIMIT",
                 quantity,
                 price: params.row?.fixedBinanceRealPrice?.toString(),
                 positionSide: "BOTH",
               });
+
+              setLoading(false);
             }}
           >
-            Al
-          </Button>
+            Short
+          </LoadingButton>
         );
       },
     },
@@ -394,7 +404,9 @@ function CoinTracker() {
             variant="contained"
             color="warning"
             size="small"
-            onClick={() => {
+            onClick={async () => {
+              handleSelect([params.row.id], "B");
+
               const quantity = +(
                 params.row.binanceUnit
                   ? +Number(params.row.binanceUnit).toFixed(
@@ -404,17 +416,35 @@ function CoinTracker() {
                     Number(params.row?.fixedBinanceRealPrice)
               ).toFixed(params.row.quantityPrecision);
 
-              createNewOrder({
+              const result = await createNewOrder({
                 symbol: params.row.symbolBinance,
-                side: "SELL",
+                side: "BUY",
                 type: "LIMIT",
                 quantity,
                 price: params.row?.fixedBinanceRealPrice?.toString(),
                 positionSide: "BOTH",
               });
+
+              if (result.success) {
+                setSelectedCoins(
+                  selectedCoins.filter((c) => c != params.row.id)
+                );
+
+                updatePrice([
+                  {
+                    ...params.row,
+                    fixedBinancePrice: null,
+                    fixedBinanceRealPrice: null,
+                    fixedParibuHighestBid: null,
+                    fixedParibuLowestAsk: null,
+                    paribuBuyPrice: null,
+                    binanceBuyPrice: null,
+                  },
+                ]);
+              }
             }}
           >
-            Sat
+            Long
           </Button>
         );
       },
@@ -433,21 +463,21 @@ function CoinTracker() {
     [items]
   );
 
-  const NumericFormat = useMemo(
-    () => (props: any, prefix?: string) =>
-      <NumericFormatCustom {...props} prefix={prefix} />,
-    []
-  );
+  const NumericFormat = forwardRef((props: any, ref) => {
+    const { prefix = "" } = props;
+    return <NumericFormatCustom {...props} prefix={prefix} refs={ref} />;
+  });
 
   const PriceInput = useMemo(
     () => ({
-      inputComponent: (props: any) => NumericFormat(props, "₺"),
+      inputComponent: (props: any) => <NumericFormat {...props} prefix="₺" />,
     }),
     []
   );
+
   const AmountInput = useMemo(
     () => ({
-      inputComponent: (props: any) => NumericFormat(props),
+      inputComponent: (props: any) => <NumericFormat {...props} />,
     }),
     []
   );

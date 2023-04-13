@@ -69,18 +69,22 @@ export interface CombinedCoin {
   sellDiff: number;
   id: string;
   buyDiff: number;
-  fixedParibuLowestAsk?: number | null;
-  fixedParibuHighestBid?: number | null;
-  fixedBinancePrice?: number | null;
   benefit?: number | null;
   paribuDiff: number;
   binanceRealPrice: number;
-  fixedBinanceRealPrice?: number;
+  quantityPrecision?: number;
+
   paribuUnit?: number;
   binanceUnit?: number;
+
   paribuBuyPrice?: number | null;
   binanceBuyPrice?: number | null;
-  quantityPrecision?: number;
+
+  fixedBinanceRealPrice?: number | null;
+  fixedParibuLowestAsk?: number | null;
+  fixedParibuHighestBid?: number | null;
+  fixedBinancePrice?: number | null;
+  [key: string]: any;
 }
 
 export type Params = GridRenderCellParams<CombinedCoin, any, any>;
