@@ -39,6 +39,7 @@ function CoinTracker() {
       headerName: "Sembol",
       description: "Sembol",
       headerAlign: "center",
+      renderCell: (params) => <strong>{params.row.symbolParibu}</strong>,
       flex: 0.6,
     },
 
