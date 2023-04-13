@@ -12,11 +12,12 @@ import SettingsModal from "./SettingsModal";
 import { useCoinTracker } from "./hooks/useCoinTracker";
 import { CustomHeader } from "./CustomHeader";
 import { CombinedCoin, Params } from "./types/Coin";
-import { Button, TextField } from "@mui/material";
+import { Button, IconButton, InputAdornment, TextField } from "@mui/material";
 import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
 import { createNewOrder } from "./binance-api";
 import React, { forwardRef, useMemo } from "react";
+import ClearIcon from "@mui/icons-material/Clear";
 import { toast } from "react-toastify";
 
 function CoinTracker() {
@@ -25,7 +26,6 @@ function CoinTracker() {
     isLoading,
     items,
     selectedCoins,
-    setSelectedCoins,
     handleSelect,
     createQueryString,
     updatePrice,
@@ -41,14 +41,7 @@ function CoinTracker() {
       headerAlign: "center",
       flex: 0.6,
     },
-    {
-      field: "benefit",
-      headerName: "Kar",
-      description: "Kar",
-      headerAlign: "center",
-      type: "number",
-      flex: 0.6,
-    },
+
     {
       field: "paribuHighestBid",
       headerName: "Satış F.",
@@ -72,16 +65,16 @@ function CoinTracker() {
       headerName: "Makas",
       headerAlign: "center",
       type: "number",
-      flex: 0.5,
+      flex: 0.6,
       description: "Paribu Makas",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params),
     },
     {
       field: "buyDiff",
-      headerName: "Alış Fark(%)",
+      headerName: "Alış F.(%)",
       type: "number",
-      flex: 0.8,
+      flex: 0.7,
       headerAlign: "center",
       description: "Alış Yüzde Fark",
       renderHeader: (params: GridColumnHeaderParams) =>
@@ -89,10 +82,10 @@ function CoinTracker() {
     },
     {
       field: "sellDiff",
-      headerName: "Satış Fark(%)",
+      headerName: "Satış F.(%)",
       type: "number",
       headerAlign: "center",
-      flex: 0.8,
+      flex: 0.7,
       description: "Satış Yüzde Fark",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params),
@@ -122,7 +115,6 @@ function CoinTracker() {
       field: "paribuAmount",
       headerName: "Miktar",
       description: "Miktar",
-      type: "action",
       headerAlign: "center",
       flex: 0.8,
       renderHeader: (params: GridColumnHeaderParams) =>
@@ -130,9 +122,33 @@ function CoinTracker() {
       renderCell: (params: Params) => {
         return (
           <TextField
-            value={params.row.paribuUnit}
+            value={params.row.paribuUnit || ""}
             size="small"
-            InputProps={AmountInput}
+            style={{ backgroundColor: "white", borderRadius: 5 }}
+            InputProps={{
+              ...AmountInput,
+              style: { paddingRight: 7 },
+              endAdornment: (
+                <InputAdornment position="end" sx={{ marginLeft: 0 }}>
+                  <IconButton
+                    sx={{
+                      visibility: params.row.paribuUnit || "hidden",
+                      padding: 0,
+                    }}
+                    onClick={() => {
+                      updatePrice([
+                        {
+                          ...params.row,
+                          paribuUnit: null,
+                        },
+                      ]);
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
             onChange={(event) => {
               const getParibuBuyPrice = () => {
                 if (!event.target.value || !params.row.fixedParibuLowestAsk)
@@ -165,9 +181,33 @@ function CoinTracker() {
         return (
           <TextField
             size="small"
-            value={params.row.paribuBuyPrice}
+            value={params.row.paribuBuyPrice || ""}
             prefix="₺"
-            InputProps={PriceInput}
+            InputProps={{
+              ...PriceInput,
+              style: { paddingRight: 7 },
+              endAdornment: (
+                <InputAdornment position="end" sx={{ marginLeft: 0 }}>
+                  <IconButton
+                    sx={{
+                      visibility: params.row.paribuBuyPrice || "hidden",
+                      padding: 0,
+                    }}
+                    onClick={() => {
+                      updatePrice([
+                        {
+                          ...params.row,
+                          paribuBuyPrice: null,
+                        },
+                      ]);
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            style={{ backgroundColor: "white", borderRadius: 5 }}
             onChange={(event) => {
               updatePrice([
                 {
@@ -213,9 +253,36 @@ function CoinTracker() {
       renderCell: (params: Params) => {
         return (
           <TextField
-            value={params.row.binanceUnit}
+            value={params.row.binanceUnit || ""}
             size="small"
-            InputProps={AmountInput}
+            style={{
+              backgroundColor: "white",
+              borderRadius: 5,
+            }}
+            InputProps={{
+              style: { paddingRight: 7 },
+              ...AmountInput,
+              endAdornment: (
+                <InputAdornment position="end" sx={{ marginLeft: 0 }}>
+                  <IconButton
+                    sx={{
+                      visibility: params.row.binanceUnit || "hidden",
+                      padding: 0,
+                    }}
+                    onClick={() => {
+                      updatePrice([
+                        {
+                          ...params.row,
+                          binanceUnit: null,
+                        },
+                      ]);
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
             onChange={(event) => {
               const getBinanceBuyPrice = () => {
                 if (!event.target.value || !params.row.fixedBinancePrice)
@@ -268,6 +335,14 @@ function CoinTracker() {
       },
     },
     {
+      field: "benefit",
+      headerName: "Kar",
+      description: "Kar",
+      headerAlign: "center",
+      type: "number",
+      flex: 0.6,
+    },
+    {
       field: "paribuBuy",
       flex: 0.5,
       headerAlign: "center",
@@ -302,6 +377,7 @@ function CoinTracker() {
                 ).toFixed(6),
                 type: "buy",
               });
+
               window.open(
                 `https://www.paribu.com/markets/${params.row.symbolParibu.toLowerCase()}?${query}`
               );
@@ -314,7 +390,7 @@ function CoinTracker() {
     },
     {
       field: "paribuSell",
-      flex: 0.6,
+      flex: 0.5,
       headerAlign: "center",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params, true),
@@ -358,7 +434,7 @@ function CoinTracker() {
     },
     {
       field: "binanceBuy",
-      flex: 0.6,
+      flex: 0.5,
       headerAlign: "center",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params, true),
@@ -411,7 +487,7 @@ function CoinTracker() {
     },
     {
       field: "binanceSell",
-      flex: 0.6,
+      flex: 0.5,
       headerAlign: "center",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params, true),
@@ -441,7 +517,6 @@ function CoinTracker() {
                 price: params.row?.fixedBinanceRealPrice?.toString(),
                 positionSide: "BOTH",
               });
-
               // setSelectedCoins(selectedCoins.filter((c) => c != params.row.id));
 
               // updatePrice([
@@ -503,6 +578,7 @@ function CoinTracker() {
       <DataGrid
         rows={combinedArray}
         loading={isLoading}
+        scrollbarSize={20}
         disableRowSelectionOnClick
         components={{
           Footer,

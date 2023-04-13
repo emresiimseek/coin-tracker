@@ -22,6 +22,7 @@ export const NumericFormatCustom = forwardRef<NumericFormatProps, CustomProps>(
             },
           });
         }}
+        style={{ paddingRight: 0 }}
         valueIsNumericString
         decimalSeparator=","
         thousandSeparator="."

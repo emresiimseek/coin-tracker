@@ -294,6 +294,8 @@ export const useCoinTracker = () => {
 
   const handleSelect = useCallback(
     (newRowSelectionModel: GridRowSelectionModel, type: "B" | "P" | "BP") => {
+      if (newRowSelectionModel.length > selectedCoins.length + 1) return;
+
       selectedCoins.concat(newRowSelectionModel).forEach((nr) => {
         const currentIndex = combinedArray.findIndex((c) => c.id === nr);
 

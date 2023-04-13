@@ -74,8 +74,8 @@ export interface CombinedCoin {
   binanceRealPrice: number;
   quantityPrecision?: number;
 
-  paribuUnit?: number;
-  binanceUnit?: number;
+  paribuUnit?: number | null;
+  binanceUnit?: number | null;
 
   paribuBuyPrice?: number | null;
   binanceBuyPrice?: number | null;
