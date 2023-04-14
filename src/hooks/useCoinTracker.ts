@@ -4,7 +4,7 @@ import {
   ParibuCoin,
   ParibuRoot,
 } from "@/types/Coin";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { defaultArray } from "../utils/default-array";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
 import { Symbol } from "@/types/ExchangeResponse";
@@ -29,6 +29,8 @@ export const useCoinTracker = () => {
   const [isLoading, setIsLoading] = useState<boolean>();
   const [loading, setLoading] = useState(false);
   const items = useMemo(() => symbols, [symbols]);
+
+  const audioPlayer = useRef<HTMLAudioElement>(null);
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
@@ -367,5 +369,6 @@ export const useCoinTracker = () => {
     selectedCoins,
     combinedArray,
     loading,
+    audioPlayer,
   };
 };

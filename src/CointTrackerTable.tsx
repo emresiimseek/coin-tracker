@@ -7,11 +7,12 @@ import {
   GridRenderCellParams,
   GridValueFormatterParams,
 } from "@mui/x-data-grid";
-import { LoadingButton } from "@mui/lab";
 import SettingsModal from "./SettingsModal";
 import { useCoinTracker } from "./hooks/useCoinTracker";
 import { CustomHeader } from "./CustomHeader";
 import { CombinedCoin, Params } from "./types/Coin";
+import NotificationSound from "./notification-sound.mp3";
+
 import {
   Button,
   IconButton,
@@ -22,7 +23,7 @@ import {
 import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
 import { createNewOrder } from "./binance-api";
-import React, { forwardRef, useMemo } from "react";
+import React, { forwardRef, useMemo, useRef } from "react";
 import ClearIcon from "@mui/icons-material/Clear";
 import { toast } from "react-toastify";
 
@@ -35,6 +36,7 @@ function CoinTracker() {
     handleSelect,
     createQueryString,
     updatePrice,
+    audioPlayer,
   } = useCoinTracker();
 
   const columns: GridColDef[] = [
@@ -603,6 +605,8 @@ function CoinTracker() {
       key={combinedArray.length || selectedCoins.length}
       style={{ maxWidth: "100vw", height: "100vh" }}
     >
+      <audio ref={audioPlayer} src={NotificationSound} />
+
       <DataGrid
         slots={{
           loadingOverlay: LinearProgress,
@@ -628,9 +632,13 @@ function CoinTracker() {
             Math.sign(value.row.sellDiff) === -1 &&
             Math.sign(value.row.buyDiff) === 1 &&
             value.row.benefit
-          )
+          ) {
+            if (audioPlayer.current) {
+              audioPlayer.current.play();
+            }
+
             return "sell";
-          else return "";
+          } else return "";
         }}
       />
     </div>
