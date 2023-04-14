@@ -4,7 +4,7 @@ export interface BinanceOrderRequest {
   type: string;
   timestamp?: number;
   price?: string;
-  quantity?: number;
+  quantity?: string;
   signature?: string;
   positionSide: "LONG" | "SHORT" | "BOTH";
 }

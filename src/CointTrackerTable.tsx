@@ -35,8 +35,6 @@ function CoinTracker() {
     handleSelect,
     createQueryString,
     updatePrice,
-    loading,
-    setLoading,
   } = useCoinTracker();
 
   const columns: GridColDef[] = [
@@ -506,13 +504,8 @@ function CoinTracker() {
 
               handleSelect([params.row.id], "B");
 
-              const quantity = +(
-                params.row.binanceUnit
-                  ? +Number(params.row.binanceUnit).toFixed(
-                      params.row.quantityPrecision
-                    )
-                  : Number(params.row.binanceBuyPrice) /
-                    Number(params.row.fixedBinanceRealPrice)
+              const quantity = (
+                params.row.binanceUnit * params.row.binanceRealPrice
               ).toFixed(params.row.quantityPrecision);
 
               createNewOrder({
@@ -520,7 +513,9 @@ function CoinTracker() {
                 side: "SELL",
                 type: "LIMIT",
                 quantity,
-                price: params.row?.fixedBinanceRealPrice?.toString(),
+                price: params.row.binanceRealPrice.toFixed(
+                  params.row.quantityPrecision
+                ),
                 positionSide: "BOTH",
               });
             }}
@@ -548,15 +543,8 @@ function CoinTracker() {
               paddingLeft: 0,
             }}
             onClick={async () => {
-              handleSelect([params.row.id], "B");
-
-              const quantity = +(
-                params.row.binanceUnit
-                  ? +Number(params.row.binanceUnit).toFixed(
-                      params.row.quantityPrecision
-                    )
-                  : Number(params.row.paribuBuyPrice) /
-                    Number(params.row?.fixedBinanceRealPrice)
+              const quantity = (
+                Number(params.row.binanceUnit) * params.row.binanceRealPrice
               ).toFixed(params.row.quantityPrecision);
 
               await createNewOrder({
@@ -564,22 +552,12 @@ function CoinTracker() {
                 side: "BUY",
                 type: "LIMIT",
                 quantity,
-                price: params.row?.fixedBinanceRealPrice?.toString(),
+                price: params.row?.binanceRealPrice?.toFixed(
+                  params.row.pricePrecision
+                ),
                 positionSide: "BOTH",
               });
-              // setSelectedCoins(selectedCoins.filter((c) => c != params.row.id));
-
-              // updatePrice([
-              //   {
-              //     ...params.row,
-              //     fixedBinancePrice: null,
-              //     fixedBinanceRealPrice: null,
-              //     fixedParibuHighestBid: null,
-              //     fixedParibuLowestAsk: null,
-              //     paribuBuyPrice: null,
-              //     binanceBuyPrice: null,
-              //   },
-              // ]);
+              handleSelect([], "BP");
             }}
           >
             Long

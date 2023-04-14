@@ -73,6 +73,7 @@ export interface CombinedCoin {
   paribuDiff: number;
   binanceRealPrice: number;
   quantityPrecision?: number;
+  pricePrecision?: number;
 
   paribuUnit?: number | null;
   binanceUnit?: number | null;
