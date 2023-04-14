@@ -27,83 +27,90 @@ export const useCoinTracker = () => {
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [symbols, setSymbol] = useState<Symbol[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>();
-
   const [loading, setLoading] = useState(false);
-
   const items = useMemo(() => symbols, [symbols]);
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
     paribuCoins: ParibuCoin[]
   ): CombinedCoin[] {
-    if (!Array.isArray(binanceCoins) || !Array.isArray(paribuCoins)) return [];
+    if (!Array.isArray(binanceCoins) || !Array.isArray(paribuCoins)) {
+      return [];
+    }
 
-    const mergedArray = binanceCoins.map((binanceCoin) => {
-      const paribuCoin = paribuCoins.find((item) => {
-        const d1 = item.symbol.split("_")[0];
-        return binanceCoin.s.replace("USDT", "") === d1;
-      });
+    const mergedArray: CombinedCoin[] = [];
 
-      const symbol = symbols.find((s) => s.symbol === binanceCoin.s);
+    binanceCoins.forEach((binanceCoin) => {
+      const d1 = binanceCoin.s.replace("USDT", "");
+
+      const paribuCoin = paribuCoins.find(
+        (item) => item.symbol.split("_")[0] === d1
+      );
 
       if (paribuCoin && usdttry?.c) {
-        const buyDiff = Number(
-          ((paribuCoin.lowestAsk - Number(binanceCoin.c) * Number(usdttry?.c)) *
-            100) /
-            paribuCoin.lowestAsk
-        );
-
+        const binancePrice = Number(binanceCoin.c);
+        const paribuLowestAsk = paribuCoin.lowestAsk;
+        const paribuHighestBid = paribuCoin.highestBid;
         const isBuy =
-          ((paribuCoin.lowestAsk - Number(binanceCoin.c) * Number(usdttry?.c)) *
-            100) /
-            paribuCoin.lowestAsk <
+          ((paribuLowestAsk - binancePrice * Number(usdttry?.c)) * 100) /
+            paribuLowestAsk <
           -0.1;
-
-        const sellDiff = Number(
-          ((Number(binanceCoin.c) * Number(usdttry?.c) -
-            paribuCoin.highestBid) *
-            100) /
-            (Number(binanceCoin.c) * Number(usdttry?.c))
+        const buyDiff = Number(
+          ((paribuLowestAsk - binancePrice * Number(usdttry?.c)) /
+            paribuLowestAsk) *
+            100
         );
+        const sellDiff = Number(
+          ((binancePrice * Number(usdttry?.c) - paribuHighestBid) /
+            (binancePrice * Number(usdttry?.c))) *
+            100
+        );
+
+        const symbol = symbols.find((s) => s.symbol === binanceCoin.s);
+        const quantityPrecision = symbol?.quantityPrecision;
+
         const data: CombinedCoin = {
           symbolBinance: binanceCoin.s,
-          priceBinance: +(Number(binanceCoin.c) * Number(usdttry?.c)).toFixed(
+          priceBinance: +(binancePrice * Number(usdttry?.c)).toFixed(
             symbol?.pricePrecision
           ),
           symbolParibu: paribuCoin.symbol,
-          paribuHighestBid: paribuCoin.highestBid,
-          paribuLowestAsk: paribuCoin.lowestAsk,
+          paribuHighestBid,
+          paribuLowestAsk,
           id: binanceCoin.s + paribuCoin.symbol,
-          binanceRealPrice: +binanceCoin.c,
+          binanceRealPrice: binancePrice,
           buyDiff,
           isBuy,
           sellDiff,
           paribuDiff:
-            ((paribuCoin.highestBid - paribuCoin.lowestAsk) /
-              paribuCoin.highestBid) *
-            100,
-          quantityPrecision: symbol?.quantityPrecision,
+            ((paribuHighestBid - paribuLowestAsk) / paribuHighestBid) * 100,
+          quantityPrecision,
         };
 
-        return data;
+        mergedArray.push(data);
       }
     });
-    return mergedArray.filter((item) => item) as CombinedCoin[];
+
+    return mergedArray;
   }
 
   const updatePrice = (prices: CombinedCoin[]) => {
     setCombinedArray((prevData) => {
-      let newDataCopy = [...prevData];
+      const newDataCopy = prevData.map((obj) => ({ ...obj }));
 
       prices.forEach((newObj) => {
-        const existingObj = newDataCopy.find((obj) => obj.id === newObj.id);
+        const existingIndex = newDataCopy.findIndex(
+          (obj) => obj.id === newObj.id
+        );
 
-        if (existingObj) {
-          Object.keys(newObj).forEach((key) => {
-            if (newObj[key] !== undefined) {
-              (existingObj as any)[key] = newObj[key];
-            } else if (newObj[key] !== null) {
-              (existingObj as any)[key] = null;
+        if (existingIndex !== -1) {
+          const existingObj = newDataCopy[existingIndex];
+
+          Object.entries(newObj).forEach(([key, value]) => {
+            if (value !== undefined) {
+              existingObj[key] = value;
+            } else if (value !== null) {
+              existingObj[key] = null;
             }
           });
 
@@ -162,6 +169,8 @@ export const useCoinTracker = () => {
   }, [usdttry, paribusCoins, binanceCoins]);
 
   const getParibuPrice = async () => {
+    if (isMockData) return;
+
     const response = await axios.get<ParibuRoot>(PARIBU_API_URL);
 
     const bitcoinPrice = response.data;
@@ -234,9 +243,7 @@ export const useCoinTracker = () => {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    const interval = setInterval(() => {
-      if (!isMockData) getParibuPrice();
-    }, 1000);
+    const interval = setInterval(getParibuPrice, 1000);
 
     const binanceSocket = new WebSocket(BINANCE_WEBSOCKET_URL);
     binanceSocket.onopen = () => {
@@ -298,53 +305,56 @@ export const useCoinTracker = () => {
     (newRowSelectionModel: GridRowSelectionModel, type: "B" | "P" | "BP") => {
       if (newRowSelectionModel.length > selectedCoins.length + 1) return;
 
-      selectedCoins.concat(newRowSelectionModel).forEach((nr) => {
-        const currentIndex = combinedArray.findIndex((c) => c.id === nr);
+      const updatedCoins = selectedCoins
+        .concat(newRowSelectionModel)
+        .map((nr) => {
+          const currentIndex = combinedArray.findIndex((c) => c.id === nr);
 
-        const data = { ...combinedArray[currentIndex] };
+          const data = { ...combinedArray[currentIndex] };
+          let updatedCoin = { ...combinedArray[currentIndex] };
 
-        const setBinance = () => {
-          combinedArray[currentIndex].fixedBinancePrice = data.priceBinance;
-          combinedArray[currentIndex].fixedBinanceRealPrice =
-            data.binanceRealPrice;
-        };
+          const setBinance = () => {
+            updatedCoin.fixedBinancePrice = data.priceBinance;
+            updatedCoin.fixedBinanceRealPrice = data.binanceRealPrice;
+          };
 
-        const setParibu = () => {
-          combinedArray[currentIndex].fixedParibuHighestBid =
-            data.paribuHighestBid;
-          combinedArray[currentIndex].fixedParibuLowestAsk =
-            data.paribuLowestAsk;
+          const setParibu = () => {
+            updatedCoin.fixedParibuHighestBid = data.paribuHighestBid;
+            updatedCoin.fixedParibuLowestAsk = data.paribuLowestAsk;
 
-          const unit = data.paribuUnit
-            ? +data.paribuUnit
-            : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
+            const unit = data.paribuUnit
+              ? +data.paribuUnit
+              : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
 
-          combinedArray[currentIndex].paribuBuyPrice =
-            +unit * Number(data.paribuLowestAsk);
-        };
+            updatedCoin.paribuBuyPrice = +unit * Number(data.paribuLowestAsk);
+          };
 
-        if (selectedCoins.includes(nr) && !newRowSelectionModel.includes(nr)) {
-          combinedArray[currentIndex].fixedParibuHighestBid = null;
-          combinedArray[currentIndex].fixedParibuLowestAsk = null;
-          combinedArray[currentIndex].fixedBinancePrice = null;
-          combinedArray[currentIndex].paribuBuyPrice = 0;
-          combinedArray[currentIndex].binanceBuyPrice = null;
-          combinedArray[currentIndex].fixedBinanceRealPrice = null;
-        } else {
-          if (type === "P") setParibu();
-          else if (type === "B") setBinance();
-          else if (type === "BP") {
-            setBinance();
-            setParibu();
+          if (
+            selectedCoins.includes(nr) &&
+            !newRowSelectionModel.includes(nr)
+          ) {
+            updatedCoin.fixedParibuHighestBid = null;
+            updatedCoin.fixedParibuLowestAsk = null;
+            updatedCoin.fixedBinancePrice = null;
+            updatedCoin.paribuBuyPrice = null;
+            updatedCoin.binanceBuyPrice = null;
+            updatedCoin.fixedBinanceRealPrice = null;
+          } else {
+            if (type === "P") setParibu();
+            else if (type === "B") setBinance();
+            else if (type === "BP") {
+              setBinance();
+              setParibu();
+            }
           }
-        }
 
-        updatePrice([combinedArray[currentIndex]]);
-      });
+          return updatedCoin;
+        });
 
+      updatePrice(updatedCoins);
       setSelectedCoins(newRowSelectionModel);
     },
-    [combinedArray, selectedCoins]
+    [combinedArray, selectedCoins, updatePrice]
   );
 
   return {
