@@ -14,6 +14,7 @@ export const NumericFormatCustom = forwardRef<NumericFormatProps, CustomProps>(
       <NumericFormat
         {...other}
         prefix={prefix}
+        placeholder={prefix}
         getInputRef={ref}
         onValueChange={(values: any) => {
           onChange({
