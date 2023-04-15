@@ -37,6 +37,7 @@ function CoinTracker() {
     createQueryString,
     updatePrice,
     audioPlayer,
+    itemCount,
   } = useCoinTracker();
 
   const columns: GridColDef[] = [
@@ -52,7 +53,7 @@ function CoinTracker() {
 
     {
       field: "paribuHighestBid",
-      headerName: "Satış Fi.",
+      headerName: "Sat. Fi.",
       minWidth: 80,
       flex: 0.6,
       description: "Paribu Satış Fiyat",
@@ -86,7 +87,7 @@ function CoinTracker() {
       headerName: "Alış Fa.(%)",
       minWidth: 80,
       type: "number",
-      flex: 0.8,
+      flex: 0.6,
       headerAlign: "center",
       description: "Alış Yüzde Fark",
       renderHeader: (params: GridColumnHeaderParams) =>
@@ -94,11 +95,11 @@ function CoinTracker() {
     },
     {
       field: "sellDiff",
-      headerName: "Satış Fa.(%)",
+      headerName: "Sat. Fa.(%)",
       minWidth: 80,
       type: "number",
       headerAlign: "center",
-      flex: 0.8,
+      flex: 0.9,
       description: "Satış Yüzde Fark",
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params),
@@ -125,14 +126,66 @@ function CoinTracker() {
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params),
     },
-
+    {
+      field: "paribuTotal",
+      headerName: "Toplam (₺)",
+      minWidth: 80,
+      description: "Paribu Toplam",
+      flex: 1,
+      headerAlign: "center",
+      type: "action",
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("p", params),
+      renderCell: (params: Params) => {
+        return (
+          <TextField
+            size="small"
+            value={params.row.paribuTotal || ""}
+            prefix="₺"
+            InputProps={{
+              ...PriceInput,
+              style: { paddingRight: 7 },
+              endAdornment: (
+                <InputAdornment position="end" sx={{ marginLeft: 0 }}>
+                  <IconButton
+                    sx={{
+                      visibility: params.row.paribuTotal || "hidden",
+                      padding: 0,
+                    }}
+                    onClick={() => {
+                      updatePrice([
+                        {
+                          ...params.row,
+                          paribuTotal: null,
+                        },
+                      ]);
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            style={{ backgroundColor: "white", borderRadius: 5 }}
+            onChange={(event) => {
+              updatePrice([
+                {
+                  ...params.row,
+                  paribuTotal: +event.target.value,
+                },
+              ]);
+            }}
+          />
+        );
+      },
+    },
     {
       field: "paribuAmount",
       headerName: "Miktar",
       minWidth: 80,
       description: "Miktar",
       headerAlign: "center",
-      flex: 0.8,
+      flex: 1,
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params),
       renderCell: (params: Params) => {
@@ -166,7 +219,7 @@ function CoinTracker() {
               ),
             }}
             onChange={(event) => {
-              const getParibuBuyPrice = () => {
+              const getParibuTotal = () => {
                 if (!event.target.value || !params.row.fixedParibuLowestAsk)
                   return null;
 
@@ -176,60 +229,7 @@ function CoinTracker() {
                 {
                   ...params.row,
                   paribuUnit: +event.target.value,
-                  paribuBuyPrice: getParibuBuyPrice(),
-                },
-              ]);
-            }}
-          />
-        );
-      },
-    },
-    {
-      field: "paribuBuyPrice",
-      headerName: "Toplam (₺)",
-      minWidth: 80,
-      description: "Paribu Toplam",
-      flex: 0.8,
-      headerAlign: "center",
-      type: "action",
-      renderHeader: (params: GridColumnHeaderParams) =>
-        CustomHeader("p", params),
-      renderCell: (params: Params) => {
-        return (
-          <TextField
-            size="small"
-            value={params.row.paribuBuyPrice || ""}
-            prefix="₺"
-            InputProps={{
-              ...PriceInput,
-              style: { paddingRight: 7 },
-              endAdornment: (
-                <InputAdornment position="end" sx={{ marginLeft: 0 }}>
-                  <IconButton
-                    sx={{
-                      visibility: params.row.paribuBuyPrice || "hidden",
-                      padding: 0,
-                    }}
-                    onClick={() => {
-                      updatePrice([
-                        {
-                          ...params.row,
-                          paribuBuyPrice: null,
-                        },
-                      ]);
-                    }}
-                  >
-                    <ClearIcon sx={{ fontSize: 15 }} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            style={{ backgroundColor: "white", borderRadius: 5 }}
-            onChange={(event) => {
-              updatePrice([
-                {
-                  ...params.row,
-                  paribuBuyPrice: +event.target.value,
+                  paribuTotal: getParibuTotal(),
                 },
               ]);
             }}
@@ -280,7 +280,7 @@ function CoinTracker() {
       description: "Miktar",
       type: "action",
       headerAlign: "center",
-      flex: 0.8,
+      flex: 1,
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params),
       renderCell: (params: Params) => {
@@ -317,7 +317,7 @@ function CoinTracker() {
               ),
             }}
             onChange={(event) => {
-              const getBinanceBuyPrice = () => {
+              const getbinanceTotal = () => {
                 if (!event.target.value || !params.row.fixedBinancePrice)
                   return null;
 
@@ -327,7 +327,7 @@ function CoinTracker() {
                 {
                   ...params.row,
                   binanceUnit: +event.target.value,
-                  binanceBuyPrice: getBinanceBuyPrice(),
+                  binanceTotal: getbinanceTotal(),
                 },
               ]);
             }}
@@ -342,14 +342,17 @@ function CoinTracker() {
       minWidth: 80,
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("b", params),
-      type: "number",
       headerAlign: "center",
-      valueFormatter: (params: GridValueFormatterParams) =>
-        numericFormatter(params.value.toString(), {
+      valueFormatter: (params: GridValueFormatterParams) => {
+        const data = params.value + "" || "";
+
+        return numericFormatter(data, {
           thousandSeparator: true,
           prefix: "₺",
           decimalScale: 3,
-        }),
+          valueIsNumericString: true,
+        });
+      },
       description: "Binance Alış Tutarı",
       flex: 0.8,
       valueGetter: (params: Params) => {
@@ -365,16 +368,16 @@ function CoinTracker() {
 
         const result = (quantity * Number(price)) / 3;
 
-        return isNaN(result) ? "" : result;
+        return isNaN(result) ? null : result;
       },
     },
     {
       field: "benefit",
       headerName: "Kar",
+      type: "number",
       minWidth: 80,
       description: "Kar",
       headerAlign: "center",
-      type: "number",
       flex: 0.6,
     },
     {
@@ -395,7 +398,7 @@ function CoinTracker() {
             }}
             size="small"
             onClick={() => {
-              if (!params.row.paribuUnit && !params.row.paribuBuyPrice) {
+              if (!params.row.paribuUnit && !params.row.paribuTotal) {
                 toast("Toplam tutar giriniz!", {
                   type: "info",
                   position: "top-center",
@@ -412,8 +415,7 @@ function CoinTracker() {
                 symbolParibu: params.row.symbolParibu,
                 amount: (params.row.paribuUnit
                   ? +params.row.paribuUnit
-                  : Number(params.row.paribuBuyPrice) /
-                    params.row.paribuLowestAsk
+                  : Number(params.row.paribuTotal) / params.row.paribuLowestAsk
                 ).toFixed(6),
                 type: "buy",
               });
@@ -446,7 +448,7 @@ function CoinTracker() {
             color="warning"
             size="small"
             onClick={() => {
-              if (!params.row.paribuUnit && !params.row.paribuBuyPrice) {
+              if (!params.row.paribuUnit && !params.row.paribuTotal) {
                 toast("Toplam tutar giriniz!", {
                   type: "info",
                   position: "top-center",
@@ -461,8 +463,7 @@ function CoinTracker() {
                 symbolParibu: params.row.symbolParibu,
                 amount: (params.row.paribuUnit
                   ? +params.row.paribuUnit
-                  : Number(params.row.paribuBuyPrice) /
-                    params.row.paribuLowestAsk
+                  : Number(params.row.paribuTotal) / params.row.paribuLowestAsk
                 ).toFixed(6),
                 type: "sell",
               });
@@ -613,7 +614,7 @@ function CoinTracker() {
           footer: Footer,
         }}
         rows={combinedArray}
-        loading={isLoading}
+        loading={combinedArray.length < itemCount}
         disableRowSelectionOnClick
         columns={columns}
         density="standard"

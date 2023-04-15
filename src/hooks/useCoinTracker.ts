@@ -26,9 +26,11 @@ export const useCoinTracker = () => {
   );
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [symbols, setSymbol] = useState<Symbol[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const items = useMemo(() => symbols, [symbols]);
+
+  const [itemCount, setItemCount] = useState(0);
 
   const audioPlayer = useRef<HTMLAudioElement>(null);
 
@@ -122,7 +124,7 @@ export const useCoinTracker = () => {
           } else {
             const paribuCount = existingObj.paribuUnit
               ? +existingObj.paribuUnit
-              : Number(existingObj?.paribuBuyPrice ?? 0) /
+              : Number(existingObj?.paribuTotal ?? 0) /
                 (existingObj?.fixedParibuLowestAsk ?? 0);
 
             const paribuProfit =
@@ -139,11 +141,15 @@ export const useCoinTracker = () => {
 
             existingObj.benefit = Number.isNaN(profit) ? null : profit;
           }
-
-          if (isLoading === true) setIsLoading(false);
         } else {
           newDataCopy.push(newObj);
           setIsLoading(true);
+          const itemCount = Number(localStorage.getItem("itemCount")) || 0;
+          if (combinedArray.length > itemCount)
+            localStorage.setItem(
+              "itemCount",
+              JSON.stringify(combinedArray.length)
+            );
         }
       });
 
@@ -156,6 +162,7 @@ export const useCoinTracker = () => {
 
       sessionStorage.setItem("coins", JSON.stringify(allCoins));
 
+      if (allCoins.length === paribusCoins.length) setIsLoading(false);
       return allCoins;
     });
   };
@@ -221,11 +228,14 @@ export const useCoinTracker = () => {
 
   // mounted hook
   useEffect(() => {
+    const count = Number(localStorage.getItem("itemCount")) || 0;
+    setItemCount(count);
     getExchangeData();
 
     const coins = sessionStorage.getItem("coins");
 
     if (coins) {
+      setSelectedCoins([]);
       let coinsData = JSON.parse(coins) as CombinedCoin[];
 
       coinsData = coinsData.map((c) => ({
@@ -234,9 +244,12 @@ export const useCoinTracker = () => {
         fixedBinanceRealPrice: null,
         fixedParibuHighestBid: null,
         fixedParibuLowestAsk: null,
-        paribuBuyPrice: null,
-        binanceBuyPrice: null,
+        paribuTotal: null,
+        binanceTotal: null,
         isBuy: false,
+        paribuUnit: null,
+        binanceUnit: null,
+        benefit: null,
       }));
 
       if (coinsData.length) setCombinedArray(coinsData);
@@ -304,7 +317,7 @@ export const useCoinTracker = () => {
 
   const handleSelect = useCallback(
     (newRowSelectionModel: GridRowSelectionModel, type: "B" | "P" | "BP") => {
-      if (newRowSelectionModel.length > selectedCoins.length + 1) return;
+      if (newRowSelectionModel.length === combinedArray.length) return;
 
       const updatedCoins = selectedCoins
         .concat(newRowSelectionModel)
@@ -325,9 +338,9 @@ export const useCoinTracker = () => {
 
             const unit = data.paribuUnit
               ? +data.paribuUnit
-              : Number(data.paribuBuyPrice) / Number(data.paribuLowestAsk);
+              : Number(data.paribuTotal) / Number(data.paribuLowestAsk);
 
-            updatedCoin.paribuBuyPrice = +unit * Number(data.paribuLowestAsk);
+            updatedCoin.paribuTotal = +unit * Number(data.paribuLowestAsk);
           };
 
           if (
@@ -337,8 +350,8 @@ export const useCoinTracker = () => {
             updatedCoin.fixedParibuHighestBid = null;
             updatedCoin.fixedParibuLowestAsk = null;
             updatedCoin.fixedBinancePrice = null;
-            updatedCoin.paribuBuyPrice = null;
-            updatedCoin.binanceBuyPrice = null;
+            updatedCoin.paribuTotal = null;
+            updatedCoin.binanceTotal = null;
             updatedCoin.fixedBinanceRealPrice = null;
           } else {
             if (type === "P") setParibu();
@@ -370,5 +383,6 @@ export const useCoinTracker = () => {
     combinedArray,
     loading,
     audioPlayer,
+    itemCount,
   };
 };

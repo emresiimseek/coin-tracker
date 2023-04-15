@@ -78,8 +78,8 @@ export interface CombinedCoin {
   paribuUnit?: number | null;
   binanceUnit?: number | null;
 
-  paribuBuyPrice?: number | null;
-  binanceBuyPrice?: number | null;
+  paribuTotal?: number | null;
+  binanceTotal?: number | null;
 
   fixedBinanceRealPrice?: number | null;
   fixedParibuLowestAsk?: number | null;
