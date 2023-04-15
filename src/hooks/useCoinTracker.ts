@@ -17,22 +17,21 @@ const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
 const PARIBU_API_URL = "https://www.paribu.com/ticker";
 
 export const useCoinTracker = () => {
-  const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
-  const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
-  const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
   const [isMockData, setIsMockData] = useState<boolean>(false);
   const [combinedArray, setCombinedArray] = useState<CombinedCoin[]>(
     isMockData ? defaultArray() : []
   );
+  const [binanceCoins, setBinanceCoins] = useState<BinanceCoins[]>([]);
+  const [usdttry, setUsdttry] = useState<BinanceCoins | null>(null);
+  const [paribusCoins, setParibuCoins] = useState<ParibuCoin[]>([]);
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [symbols, setSymbol] = useState<Symbol[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const items = useMemo(() => symbols, [symbols]);
-
   const [itemCount, setItemCount] = useState(0);
-
   const audioPlayer = useRef<HTMLAudioElement>(null);
+  const [sellList, setSellList] = useState<string[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
@@ -134,17 +133,25 @@ export const useCoinTracker = () => {
 
             const binanceProfit =
               existingObj.fixedBinancePrice *
-                +paribuCount.toFixed(existingObj.quantityPrecision) -
+                +Number(existingObj.binanceUnit).toFixed(
+                  existingObj.quantityPrecision
+                ) -
               existingObj.priceBinance *
-                +paribuCount.toFixed(existingObj.quantityPrecision);
+                +Number(existingObj.binanceUnit).toFixed(
+                  existingObj.quantityPrecision
+                );
 
             const profit = paribuProfit + binanceProfit;
 
-            existingObj.benefit = Number.isNaN(profit) ? null : profit;
+            existingObj.benefit =
+              Number.isNaN(profit) ||
+              !existingObj.binanceUnit ||
+              !existingObj.paribuUnit
+                ? null
+                : profit;
           }
         } else {
           newDataCopy.push(newObj);
-          setIsLoading(true);
           const itemCount = Number(localStorage.getItem("itemCount")) || 0;
           if (combinedArray.length > itemCount)
             localStorage.setItem(
@@ -163,7 +170,6 @@ export const useCoinTracker = () => {
 
       sessionStorage.setItem("coins", JSON.stringify(allCoins));
 
-      if (allCoins.length === paribusCoins.length) setIsLoading(false);
       return allCoins;
     });
   };
@@ -318,56 +324,59 @@ export const useCoinTracker = () => {
 
   const handleSelect = useCallback(
     (newRowSelectionModel: GridRowSelectionModel, type: "B" | "P" | "BP") => {
-      if (newRowSelectionModel.length === combinedArray.length) return;
+      if (newRowSelectionModel.length === combinedArray.length) {
+        setDialogOpen(true);
+        return;
+      } else {
+        const updatedCoins = selectedCoins
+          .concat(newRowSelectionModel)
+          .map((nr) => {
+            const currentIndex = combinedArray.findIndex((c) => c.id === nr);
 
-      const updatedCoins = selectedCoins
-        .concat(newRowSelectionModel)
-        .map((nr) => {
-          const currentIndex = combinedArray.findIndex((c) => c.id === nr);
+            const data = { ...combinedArray[currentIndex] };
+            let updatedCoin = { ...combinedArray[currentIndex] };
 
-          const data = { ...combinedArray[currentIndex] };
-          let updatedCoin = { ...combinedArray[currentIndex] };
+            const setBinance = () => {
+              updatedCoin.fixedBinancePrice = data.priceBinance;
+              updatedCoin.fixedBinanceRealPrice = data.binanceRealPrice;
+            };
 
-          const setBinance = () => {
-            updatedCoin.fixedBinancePrice = data.priceBinance;
-            updatedCoin.fixedBinanceRealPrice = data.binanceRealPrice;
-          };
+            const setParibu = () => {
+              updatedCoin.fixedParibuHighestBid = data.paribuHighestBid;
+              updatedCoin.fixedParibuLowestAsk = data.paribuLowestAsk;
 
-          const setParibu = () => {
-            updatedCoin.fixedParibuHighestBid = data.paribuHighestBid;
-            updatedCoin.fixedParibuLowestAsk = data.paribuLowestAsk;
+              const unit = data.paribuUnit
+                ? +data.paribuUnit
+                : Number(data.paribuTotal) / Number(data.paribuLowestAsk);
 
-            const unit = data.paribuUnit
-              ? +data.paribuUnit
-              : Number(data.paribuTotal) / Number(data.paribuLowestAsk);
+              updatedCoin.paribuTotal = +unit * Number(data.paribuLowestAsk);
+            };
 
-            updatedCoin.paribuTotal = +unit * Number(data.paribuLowestAsk);
-          };
-
-          if (
-            selectedCoins.includes(nr) &&
-            !newRowSelectionModel.includes(nr)
-          ) {
-            updatedCoin.fixedParibuHighestBid = null;
-            updatedCoin.fixedParibuLowestAsk = null;
-            updatedCoin.fixedBinancePrice = null;
-            updatedCoin.paribuTotal = null;
-            updatedCoin.binanceTotal = null;
-            updatedCoin.fixedBinanceRealPrice = null;
-          } else {
-            if (type === "P") setParibu();
-            else if (type === "B") setBinance();
-            else if (type === "BP") {
-              setBinance();
-              setParibu();
+            if (
+              selectedCoins.includes(nr) &&
+              !newRowSelectionModel.includes(nr)
+            ) {
+              updatedCoin.fixedParibuHighestBid = null;
+              updatedCoin.fixedParibuLowestAsk = null;
+              updatedCoin.fixedBinancePrice = null;
+              updatedCoin.paribuTotal = null;
+              updatedCoin.binanceTotal = null;
+              updatedCoin.fixedBinanceRealPrice = null;
+            } else {
+              if (type === "P") setParibu();
+              else if (type === "B") setBinance();
+              else if (type === "BP") {
+                setBinance();
+                setParibu();
+              }
             }
-          }
 
-          return updatedCoin;
-        });
+            return updatedCoin;
+          });
 
-      updatePrice(updatedCoins);
-      setSelectedCoins(newRowSelectionModel);
+        updatePrice(updatedCoins);
+        setSelectedCoins(newRowSelectionModel);
+      }
     },
     [combinedArray, selectedCoins, updatePrice]
   );
@@ -377,13 +386,16 @@ export const useCoinTracker = () => {
     createQueryString,
     setSelectedCoins,
     handleSelect,
-    setLoading,
-    isLoading,
     items,
     selectedCoins,
     combinedArray,
     loading,
     audioPlayer,
     itemCount,
+    sellList,
+    setSellList,
+    dialogOpen,
+    setDialogOpen,
+    setBinanceCoins,
   };
 };

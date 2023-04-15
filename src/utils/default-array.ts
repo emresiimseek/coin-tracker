@@ -15,6 +15,7 @@ export const defaultArray = (): CombinedCoin[] => [
     quantityPrecision: 1,
     paribuDiff: -0.2844372206420166,
     benefit: null,
+    isSell: false,
   },
   // {
   //   symbolBinance: "BANDUSDT",

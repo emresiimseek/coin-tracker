@@ -23,14 +23,14 @@ import {
 import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
 import { createNewOrder } from "./binance-api";
-import React, { forwardRef, useMemo, useRef } from "react";
+import React, { forwardRef, useMemo } from "react";
 import ClearIcon from "@mui/icons-material/Clear";
 import { toast } from "react-toastify";
+import YesNoDialog from "./YesNoDialog";
 
 function CoinTracker() {
   const {
     combinedArray,
-    isLoading,
     items,
     selectedCoins,
     handleSelect,
@@ -38,6 +38,11 @@ function CoinTracker() {
     updatePrice,
     audioPlayer,
     itemCount,
+    dialogOpen,
+    setDialogOpen,
+    sellList,
+    setSellList,
+    setSelectedCoins,
   } = useCoinTracker();
 
   const columns: GridColDef[] = [
@@ -108,6 +113,7 @@ function CoinTracker() {
         return (
           <TextField
             size="small"
+            autoComplete="off"
             value={params.row.paribuTotal || ""}
             prefix="₺"
             InputProps={{
@@ -166,6 +172,7 @@ function CoinTracker() {
         return (
           <TextField
             value={params.row.paribuUnit || ""}
+            autoComplete="off"
             size="small"
             style={{ backgroundColor: "white", borderRadius: 5 }}
             InputProps={{
@@ -261,6 +268,7 @@ function CoinTracker() {
         return (
           <TextField
             value={params.row.binanceUnit || ""}
+            autoComplete="off"
             size="small"
             style={{
               backgroundColor: "white",
@@ -342,7 +350,7 @@ function CoinTracker() {
 
         const result = (quantity * Number(price)) / 3;
 
-        return isNaN(result) ? null : result;
+        return isNaN(result) || !params.row.binanceUnit ? "" : result;
       },
     },
     {
@@ -381,9 +389,6 @@ function CoinTracker() {
               params.row.quantityPrecision
             );
 
-        if (params.row.symbolParibu == "ARB_TL")
-          console.log(Number(params.row.binanceTotal));
-
         const commissionBinance =
           commissionB * Number(params.row.binanceTotal) +
           commissionB * (Number(params.row.binanceTotal) + binanceProfit);
@@ -392,7 +397,7 @@ function CoinTracker() {
 
         const lastBenefit = Number(params.row.benefit);
 
-        return isNaN(lastBenefit) ? "" : lastBenefit;
+        return isNaN(lastBenefit) || lastBenefit === 0 ? "" : lastBenefit;
       },
     },
     {
@@ -659,7 +664,22 @@ function CoinTracker() {
       style={{ maxWidth: "100vw", height: "100vh" }}
     >
       <audio ref={audioPlayer} src={NotificationSound} />
+      <YesNoDialog
+        title="Alınabilir tüm coinleri şeçmek istediğinizden emin misiniz?"
+        open={dialogOpen}
+        onClose={(result) => {
+          setDialogOpen(false);
 
+          if (result) {
+            const allIds = combinedArray
+              .filter((item) => item.isBuy)
+              .map((item) => item.id);
+
+            handleSelect(allIds, "BP");
+            setSelectedCoins(allIds);
+          }
+        }}
+      />
       <DataGrid
         slots={{
           loadingOverlay: LinearProgress,
@@ -680,18 +700,32 @@ function CoinTracker() {
           handleSelect(rowSelectionModel, "BP")
         }
         getRowClassName={(value) => {
-          if (value.row.isBuy) return "buy";
-          else if (
-            Math.sign(value.row.sellDiff) === -1 &&
-            Math.sign(value.row.buyDiff) === 1 &&
-            value.row.benefit
-          ) {
-            if (audioPlayer.current) {
-              audioPlayer.current.play();
-            }
+          const { isBuy, sellDiff, buyDiff, id, benefit } = value.row;
 
-            return "sell";
-          } else return "";
+          const isSell =
+            Math.sign(sellDiff) === -1 && Math.sign(buyDiff) === 1 && benefit;
+
+          let tradeType = "";
+
+          if (isBuy) {
+            if (sellList.includes(id)) {
+              setSellList((prev) => prev.filter((id) => id !== id));
+            }
+            tradeType = "buy";
+          } else if (isSell) {
+            if (!sellList.includes(id)) {
+              setSellList((prev) => [...prev, id]);
+
+              if (audioPlayer.current) audioPlayer.current.play();
+            }
+            tradeType = "sell";
+          } else {
+            if (sellList.includes(id)) {
+              setSellList((prev) => prev.filter((id) => id !== id));
+            }
+          }
+
+          return tradeType;
         }}
       />
     </div>
