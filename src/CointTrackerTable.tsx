@@ -546,6 +546,14 @@ function CoinTracker() {
               paddingLeft: 0,
             }}
             onClick={async () => {
+              if (!params.row.binanceUnit) {
+                toast("Miktar giriniz!", {
+                  type: "info",
+                  position: "top-center",
+                  autoClose: 1000,
+                });
+                return;
+              }
               const quantity = (
                 Number(params.row.binanceUnit) * params.row.binanceRealPrice
               ).toFixed(params.row.quantityPrecision);
