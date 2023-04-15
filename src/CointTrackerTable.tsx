@@ -71,39 +71,7 @@ function CoinTracker() {
       renderHeader: (params: GridColumnHeaderParams) =>
         CustomHeader("p", params),
     },
-    {
-      field: "paribuDiff",
-      headerName: "Makas",
-      minWidth: 80,
-      headerAlign: "center",
-      type: "number",
-      flex: 0.6,
-      description: "Paribu Makas",
-      renderHeader: (params: GridColumnHeaderParams) =>
-        CustomHeader("p", params),
-    },
-    {
-      field: "buyDiff",
-      headerName: "Alış Fa.(%)",
-      minWidth: 80,
-      type: "number",
-      flex: 0.6,
-      headerAlign: "center",
-      description: "Alış Yüzde Fark",
-      renderHeader: (params: GridColumnHeaderParams) =>
-        CustomHeader("p", params),
-    },
-    {
-      field: "sellDiff",
-      headerName: "Sat. Fa.(%)",
-      minWidth: 80,
-      type: "number",
-      headerAlign: "center",
-      flex: 0.9,
-      description: "Satış Yüzde Fark",
-      renderHeader: (params: GridColumnHeaderParams) =>
-        CustomHeader("p", params),
-    },
+
     {
       field: "fixedParibuLowestAsk",
       headerName: "SPA",
@@ -172,6 +140,12 @@ function CoinTracker() {
                 {
                   ...params.row,
                   paribuTotal: +event.target.value,
+                  paribuUnit:
+                    +event.target.value /
+                    Number(
+                      params.row.fixedParibuLowestAsk ??
+                        params.row.paribuLowestAsk
+                    ),
                 },
               ]);
             }}
@@ -379,6 +353,76 @@ function CoinTracker() {
       description: "Kar",
       headerAlign: "center",
       flex: 0.6,
+      valueGetter: (params: Params) => {
+        const commissionP = 2.5 / 1000;
+
+        const count = params.row.paribuUnit
+          ? params.row.paribuUnit
+          : Number(params.row.paribuTotal) /
+            Number(params.row.fixedParibuLowestAsk);
+
+        const paribuProfit =
+          params.row.paribuHighestBid * count -
+          (params.row?.fixedParibuLowestAsk ?? 0) * count;
+
+        const commissionParibu =
+          commissionP * Number(params.row.paribuTotal) +
+          commissionP * (Number(params.row.paribuTotal) + paribuProfit);
+
+        const commissionB = 0.2 / 1000;
+
+        const binanceProfit =
+          Number(params.row.fixedBinancePrice) *
+            +Number(params.row.binanceUnit).toFixed(
+              params.row.quantityPrecision
+            ) -
+          params.row.priceBinance *
+            +Number(params.row.binanceUnit).toFixed(
+              params.row.quantityPrecision
+            );
+
+        if (params.row.symbolParibu == "ARB_TL")
+          console.log(Number(params.row.binanceTotal));
+
+        const commissionBinance =
+          commissionB * Number(params.row.binanceTotal) +
+          commissionB * (Number(params.row.binanceTotal) + binanceProfit);
+
+        const totalCommisson = commissionBinance + commissionParibu;
+
+        const lastBenefit = Number(params.row.benefit);
+
+        return isNaN(lastBenefit) ? "" : lastBenefit;
+      },
+    },
+    {
+      field: "paribuDiff",
+      headerName: "Makas",
+      minWidth: 80,
+      headerAlign: "center",
+      type: "number",
+      flex: 0.6,
+      description: "Paribu Makas",
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("p", params),
+    },
+    {
+      field: "buyDiff",
+      headerName: "Alış Fa.(%)",
+      minWidth: 80,
+      type: "number",
+      flex: 0.8,
+      headerAlign: "center",
+      description: "Alış Yüzde Fark",
+    },
+    {
+      field: "sellDiff",
+      headerName: "Sat. Fa.(%)",
+      minWidth: 80,
+      type: "number",
+      headerAlign: "center",
+      flex: 0.8,
+      description: "Satış Yüzde Fark",
     },
     {
       field: "paribuBuy",

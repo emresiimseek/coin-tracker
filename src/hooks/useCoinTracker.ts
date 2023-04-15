@@ -59,6 +59,7 @@ export const useCoinTracker = () => {
           ((paribuLowestAsk - binancePrice * Number(usdttry?.c)) * 100) /
             paribuLowestAsk <
           -0.1;
+
         const buyDiff = Number(
           ((paribuLowestAsk - binancePrice * Number(usdttry?.c)) /
             paribuLowestAsk) *
