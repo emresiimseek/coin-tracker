@@ -115,7 +115,7 @@ function CoinTracker() {
             size="small"
             autoComplete="off"
             value={params.row.paribuTotal || ""}
-            prefix="₺"
+            placeholder="₺"
             InputProps={{
               inputComponent: NumericFormatCustom as any,
               style: { paddingRight: 7 },

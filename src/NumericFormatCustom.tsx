@@ -3,18 +3,17 @@ import { NumericFormat, NumericFormatProps } from "react-number-format";
 
 interface CustomProps {
   onChange: (event: { target: { value: string } }) => void;
-  prefix?: string;
+  placeholder?: string;
 }
 
 export const NumericFormatCustom = forwardRef<NumericFormatProps, CustomProps>(
   function NumericFormatCustom(props, ref) {
-    const { onChange, prefix, ...other } = props;
+    const { onChange, ...other } = props;
 
     return (
       <NumericFormat
         {...other}
-        prefix={prefix}
-        placeholder={prefix}
+        prefix={props.placeholder}
         getInputRef={ref}
         onValueChange={(values: any) => {
           onChange({
