@@ -117,7 +117,7 @@ function CoinTracker() {
             value={params.row.paribuTotal || ""}
             prefix="₺"
             InputProps={{
-              ...PriceInput,
+              inputComponent: NumericFormatCustom as any,
               style: { paddingRight: 7 },
               endAdornment: (
                 <InputAdornment position="end" sx={{ marginLeft: 0 }}>
@@ -176,7 +176,7 @@ function CoinTracker() {
             size="small"
             style={{ backgroundColor: "white", borderRadius: 5 }}
             InputProps={{
-              ...AmountInput,
+              inputComponent: NumericFormatCustom as any,
               style: { paddingRight: 7 },
               endAdornment: (
                 <InputAdornment position="end" sx={{ marginLeft: 0 }}>
@@ -233,7 +233,6 @@ function CoinTracker() {
       field: "binanceRealPrice",
       headerName: "Fiyat($)",
       minWidth: 80,
-      resizable: true,
       flex: 0.7,
       type: "number",
       headerAlign: "center",
@@ -276,7 +275,7 @@ function CoinTracker() {
             }}
             InputProps={{
               style: { paddingRight: 7 },
-              ...AmountInput,
+              inputComponent: NumericFormatCustom as any,
               endAdornment: (
                 <InputAdornment position="end" sx={{ marginLeft: 0 }}>
                   <IconButton
@@ -637,25 +636,6 @@ function CoinTracker() {
       ),
 
     [items]
-  );
-
-  const NumericFormat = forwardRef((props: any, ref) => {
-    const { prefix = "" } = props;
-    return <NumericFormatCustom {...props} prefix={prefix} refs={ref} />;
-  });
-
-  const PriceInput = useMemo(
-    () => ({
-      inputComponent: (props: any) => <NumericFormat {...props} prefix="₺" />,
-    }),
-    []
-  );
-
-  const AmountInput = useMemo(
-    () => ({
-      inputComponent: (props: any) => <NumericFormat {...props} />,
-    }),
-    []
   );
 
   return (
