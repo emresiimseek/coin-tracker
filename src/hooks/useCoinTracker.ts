@@ -253,7 +253,6 @@ export const useCoinTracker = () => {
         fixedParibuLowestAsk: null,
         paribuTotal: null,
         binanceTotal: null,
-        isBuy: false,
         paribuUnit: null,
         binanceUnit: null,
         benefit: null,
