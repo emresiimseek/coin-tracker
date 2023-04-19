@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { NumericFormatCustom } from "./NumericFormatCustom";
 import { numericFormatter } from "react-number-format";
-import { createNewOrder } from "./binance-api";
+import { btcSumbitOrder, createNewOrder } from "./binance-api";
 import React, { forwardRef, useMemo } from "react";
 import ClearIcon from "@mui/icons-material/Clear";
 import { toast } from "react-toastify";
@@ -37,12 +37,15 @@ function CoinTracker() {
     createQueryString,
     updatePrice,
     audioPlayer,
-    itemCount,
     dialogOpen,
     setDialogOpen,
     sellList,
     setSellList,
     setSelectedCoins,
+    alignment,
+    setAlignment,
+    columnVisibilityModel,
+    isParibu,
   } = useCoinTracker();
 
   const columns: GridColDef[] = [
@@ -52,10 +55,164 @@ function CoinTracker() {
       minWidth: 80,
       description: "Sembol",
       headerAlign: "center",
-      renderCell: (params) => <strong>{params.row.symbolParibu}</strong>,
+      renderCell: (params) => <strong>{params.row.symbolBinance}</strong>,
       flex: 0.6,
     },
+    {
+      field: "btcBid",
+      headerName: "Satış F.",
+      minWidth: 80,
+      type: "number",
+      headerAlign: "center",
+      flex: 0.8,
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params),
+    },
+    {
+      field: "btcAsk",
+      headerName: "Alış F.",
+      minWidth: 80,
+      type: "number",
+      headerAlign: "center",
+      flex: 0.8,
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params),
+    },
+    {
+      field: "fixedBtcBid",
+      headerName: "Satış F.",
+      minWidth: 80,
+      type: "number",
+      headerAlign: "center",
+      flex: 0.8,
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params),
+    },
+    {
+      field: "fixedBtcAsk",
+      headerName: "Alış F.",
+      minWidth: 80,
+      type: "number",
+      headerAlign: "center",
+      flex: 0.8,
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params),
+    },
+    {
+      field: "btcTotal",
+      headerName: "Toplam ($)",
+      minWidth: 80,
+      description: "BTC Toplam",
+      flex: 1,
+      headerAlign: "center",
+      type: "action",
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params),
+      renderCell: (params: Params) => {
+        return (
+          <TextField
+            size="small"
+            autoComplete="off"
+            value={params.row.btcTotal || ""}
+            placeholder="$"
+            InputProps={{
+              inputComponent: NumericFormatCustom as any,
+              style: { paddingRight: 7 },
+              endAdornment: (
+                <InputAdornment position="end" sx={{ marginLeft: 0 }}>
+                  <IconButton
+                    sx={{
+                      visibility: params.row.btcTotal || "hidden",
+                      padding: 0,
+                    }}
+                    onClick={() => {
+                      updatePrice([
+                        {
+                          ...params.row,
+                          btcTotal: null,
+                        },
+                      ]);
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            style={{ backgroundColor: "white", borderRadius: 5 }}
+            onChange={(event) => {
+              updatePrice([
+                {
+                  ...params.row,
+                  btcTotal: +event.target.value,
+                  btcUnit:
+                    +event.target.value /
+                    Number(params.row.fixedBtcAsk ?? params.row.btcAsk),
+                },
+              ]);
+            }}
+          />
+        );
+      },
+    },
+    {
+      field: "btcUnit",
+      headerName: "Miktar",
+      minWidth: 80,
+      description: "Miktar",
+      headerAlign: "center",
+      flex: 1,
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params),
+      renderCell: (params: Params) => {
+        return (
+          <TextField
+            value={params.row.btcUnit || ""}
+            autoComplete="off"
+            size="small"
+            style={{ backgroundColor: "white", borderRadius: 5 }}
+            InputProps={{
+              inputComponent: NumericFormatCustom as any,
+              style: { paddingRight: 7 },
+              endAdornment: (
+                <InputAdornment position="end" sx={{ marginLeft: 0 }}>
+                  <IconButton
+                    sx={{
+                      visibility: params.row.btcUnit || "hidden",
+                      padding: 0,
+                    }}
+                    onClick={() => {
+                      updatePrice([
+                        {
+                          ...params.row,
+                          btcUnit: null,
+                        },
+                      ]);
+                    }}
+                  >
+                    <ClearIcon sx={{ fontSize: 15 }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            onChange={(event) => {
+              const getBTCTotal = () => {
+                if (!event.target.value || !params.row.fixedBtcA) return null;
 
+                return +event.target.value * Number(params.row.fixedBtcAsk);
+              };
+              updatePrice([
+                {
+                  ...params.row,
+                  btcUnit: +event.target.value,
+                  btcTotal: getBTCTotal(),
+                },
+              ]);
+            }}
+          />
+        );
+      },
+    },
     {
       field: "paribuHighestBid",
       headerName: "Sat. Fi.",
@@ -318,7 +475,7 @@ function CoinTracker() {
     },
     {
       field: "binanceTotalPrice",
-      headerName: "Toplam(₺)",
+      headerName: `Toplam${isParibu ? "(₺)" : "($)"}`,
       hideSortIcons: true,
       minWidth: 80,
       renderHeader: (params: GridColumnHeaderParams) =>
@@ -369,7 +526,7 @@ function CoinTracker() {
             Number(params.row.fixedParibuLowestAsk);
 
         const paribuProfit =
-          params.row.paribuHighestBid * count -
+          Number(params.row.paribuHighestBid) * count -
           (params.row?.fixedParibuLowestAsk ?? 0) * count;
 
         const commissionParibu =
@@ -400,15 +557,15 @@ function CoinTracker() {
       },
     },
     {
-      field: "paribuDiff",
+      field: "scissors",
       headerName: "Makas",
       minWidth: 80,
       headerAlign: "center",
       type: "number",
       flex: 0.6,
-      description: "Paribu Makas",
+      description: "Makas",
       renderHeader: (params: GridColumnHeaderParams) =>
-        CustomHeader("p", params),
+        CustomHeader(isParibu ? "p" : "bt", params),
     },
     {
       field: "buyDiff",
@@ -458,12 +615,13 @@ function CoinTracker() {
               handleSelect([params.row.id], "P");
 
               const query = createQueryString({
-                paribuBuyPrice: params.row.paribuLowestAsk.toString(),
-                paribuSellPrice: params.row.paribuHighestBid.toString(),
+                paribuBuyPrice: params.row?.paribuLowestAsk?.toString(),
+                paribuSellPrice: params.row?.paribuHighestBid?.toString(),
                 symbolParibu: params.row.symbolParibu,
                 amount: (params.row.paribuUnit
                   ? +params.row.paribuUnit
-                  : Number(params.row.paribuTotal) / params.row.paribuLowestAsk
+                  : Number(params.row.paribuTotal) /
+                    Number(params.row.paribuLowestAsk)
                 ).toFixed(6),
                 type: "buy",
               });
@@ -506,12 +664,13 @@ function CoinTracker() {
               }
 
               const query = createQueryString({
-                paribuBuyPrice: params.row.paribuLowestAsk.toString(),
-                paribuSellPrice: params.row.paribuHighestBid.toString(),
+                paribuBuyPrice: params.row?.paribuLowestAsk?.toString(),
+                paribuSellPrice: params.row?.paribuHighestBid?.toString(),
                 symbolParibu: params.row.symbolParibu,
                 amount: (params.row.paribuUnit
                   ? +params.row.paribuUnit
-                  : Number(params.row.paribuTotal) / params.row.paribuLowestAsk
+                  : Number(params.row.paribuTotal) /
+                    Number(params.row.paribuLowestAsk)
                 ).toFixed(6),
                 type: "sell",
               });
@@ -624,18 +783,106 @@ function CoinTracker() {
         );
       },
     },
+    {
+      field: "btcBuy",
+      headerAlign: "center",
+      minWidth: 75,
+      maxWidth: 75,
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params, true),
+      renderCell: (params: GridRenderCellParams<CombinedCoin>) => {
+        return (
+          <Button
+            variant="contained"
+            size="small"
+            sx={{
+              paddingRight: 0,
+              paddingLeft: 0,
+            }}
+            color="success"
+            onClick={async () => {
+              if (!params.row.btcUnit) {
+                toast("Miktar giriniz!", {
+                  type: "info",
+                  position: "top-center",
+                  autoClose: 1000,
+                });
+                return;
+              }
+
+              btcSumbitOrder({
+                orderType: "buy",
+                quantity: params.row.btcUnit.toString() ?? "",
+                pairSymbol: params.row.btcSymbol?.toString() ?? "",
+                price: params.row.btcBid?.toString() ?? "",
+              });
+
+              handleSelect([], "BTC");
+            }}
+          >
+            Short
+          </Button>
+        );
+      },
+    },
+    {
+      field: "btcSell",
+      headerAlign: "center",
+      minWidth: 80,
+      maxWidth: 80,
+      renderHeader: (params: GridColumnHeaderParams) =>
+        CustomHeader("bt", params, true),
+      renderCell: (params: Params) => {
+        return (
+          <Button
+            variant="contained"
+            color="warning"
+            size="small"
+            sx={{
+              paddingRight: 0,
+              paddingLeft: 0,
+            }}
+            onClick={async () => {
+              if (!params.row.btcUnit) {
+                toast("Miktar giriniz!", {
+                  type: "info",
+                  position: "top-center",
+                  autoClose: 1000,
+                });
+                return;
+              }
+
+              btcSumbitOrder({
+                orderType: "buy",
+                quantity: params.row.btcUnit.toString() ?? "",
+                pairSymbol: params.row.btcSymbol?.toString() ?? "",
+                price: params.row.btcAsk?.toString() ?? "",
+              });
+
+              handleSelect([], "BTC");
+            }}
+          >
+            Long
+          </Button>
+        );
+      },
+    },
   ];
 
   const Footer = useMemo(
     () => () =>
       (
         <GridFooterContainer>
-          <SettingsModal symbols={items} />
+          <SettingsModal
+            symbols={items}
+            alignment={alignment}
+            onChange={(alignment) => setAlignment(alignment)}
+          />
           <GridPagination style={{ flex: 1 }} />
         </GridFooterContainer>
       ),
 
-    [items]
+    [items, alignment]
   );
 
   return (
@@ -666,9 +913,9 @@ function CoinTracker() {
           footer: Footer,
         }}
         rows={combinedArray}
-        loading={combinedArray.length < itemCount}
         disableRowSelectionOnClick
         columns={columns}
+        columnVisibilityModel={columnVisibilityModel}
         density="standard"
         style={{
           height: "100vh",

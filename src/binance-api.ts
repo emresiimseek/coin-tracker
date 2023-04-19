@@ -1,6 +1,7 @@
 import axios, { AxiosResponse } from "axios";
 import { BinanceOrderRequest } from "./types/BinanceOrderRequest";
 import CryptoES from "crypto-es";
+
 import { ExchangeInfo } from "./types/ExchangeResponse";
 import { toast } from "react-toastify";
 
@@ -53,6 +54,45 @@ export const getExchange = async () => {
   );
 
   return usdtCoins;
+};
+
+export const btcSumbitOrder = async ({
+  quantity,
+}: {
+  quantity: string;
+  price: string;
+  orderType: "buy" | "sell";
+  pairSymbol: string;
+}) => {
+  const method = "order";
+
+  const authentication = {};
+  const data = {
+    quantity: "1",
+    price: "500000",
+    newOrderClientId: "nodejs-request-test",
+    orderMethod: "limit",
+    orderType: "buy",
+    pairSymbol: "BTCTRY",
+    stamp: new Date().getTime(),
+  };
+  try {
+    toast.promise(
+      axios.post(proxyBaseUrl + method, data, authentication),
+      {
+        pending: "İşlem devam ediyor...",
+        success: "Başarılı!",
+        error: {
+          render({ data }) {
+            return (data as any).response.data.message;
+          },
+        },
+      },
+      { position: "top-center" }
+    );
+  } catch (err) {
+    console.error("error:" + err);
+  }
 };
 
 export const setLeverageApi = (symbol: string, leverage: string = "3") => {
@@ -124,4 +164,13 @@ export const changeMarginType = (
     },
     { position: "top-center" }
   );
+};
+export const getTicker = async () => {
+  const response = await axios.get(`${proxyBaseUrl}ticker`, {
+    headers: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  return response.data;
 };

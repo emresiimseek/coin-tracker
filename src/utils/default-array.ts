@@ -13,7 +13,7 @@ export const defaultArray = (): CombinedCoin[] => [
     isBuy: true,
     sellDiff: 0.4860454019781646,
     quantityPrecision: 1,
-    paribuDiff: -0.2844372206420166,
+    scissors: -0.2844372206420166,
     benefit: null,
     isSell: false,
   },

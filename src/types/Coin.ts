@@ -62,15 +62,14 @@ export interface ParibuRoot {
 export interface CombinedCoin {
   symbolBinance: string;
   priceBinance: number;
-  symbolParibu: string;
-  paribuLowestAsk: number;
-  paribuHighestBid: number;
+  paribuLowestAsk?: number;
+  paribuHighestBid?: number;
   isBuy: boolean;
   sellDiff: number;
   id: string;
   buyDiff: number;
   benefit?: number | null;
-  paribuDiff: number;
+  scissors: number;
   binanceRealPrice: number;
   quantityPrecision?: number;
   pricePrecision?: number;
@@ -85,7 +84,54 @@ export interface CombinedCoin {
   fixedParibuLowestAsk?: number | null;
   fixedParibuHighestBid?: number | null;
   fixedBinancePrice?: number | null;
+
+  btcSymbol?: string;
+  btcBid?: string;
+  btcAsk?: string;
+  btcUnit?: number | null;
+  fixedBtcAsk?: number | null;
+  fixedBtcBid?: number | null;
+  btcTotal?: number | null;
+
   [key: string]: any;
 }
 
 export type Params = GridRenderCellParams<CombinedCoin, any, any>;
+export interface BTCCoin {
+  pair: string;
+  pairNormalized: string;
+  timestamp: number;
+  last: number;
+  high: number;
+  low: number;
+  bid: number;
+  ask: number;
+  open: number;
+  volume: number;
+  average: number;
+  daily: number;
+  dailyPercent: number;
+  denominatorSymbol: string;
+  numeratorSymbol: string;
+  order: number;
+}
+
+export interface BTCTickerData {
+  A: string; // En iyi satış emri fiyatı
+  AA: string; // En iyi satış emri miktarı
+  AV: string; // Ortalama fiyat
+  B: string; // En iyi alış emri fiyatı
+  BA: string; // En iyi alış emri miktarı
+  D: string; // Günlük değişim miktarı
+  DP: string; // Son 24 saatteki değişim oranı
+  DS: string; // Payda Sembolü. Örneğin BTCTRY TRY.
+  H: string; // Son 24 saatteki en yüksek fiyat
+  L: string; // Son 24 saatteki en düşük fiyat
+  LA: string; // Son işlem fiyatı
+  NS: string; // Pay Sembolü. Örneğin BTCTRY için BTC.
+  O: string; // Günün ilk işlem fiyatı
+  Ord: number; // Emir Id değeri
+  PId: number; // Çift Id değeri
+  PS: string; // Çift Sembolü. Örneğin BTCTRY
+  V: string; // Hacim
+}

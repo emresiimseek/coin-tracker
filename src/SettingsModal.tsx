@@ -8,21 +8,38 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 
-import { useState, memo } from "react";
+import { useState, memo, MouseEvent } from "react";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Symbol } from "./types/ExchangeResponse";
 import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { changeMarginType, setLeverageApi } from "./binance-api";
 import CloseIcon from "@mui/icons-material/Close";
-export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
+export const SettingsModal = ({
+  symbols,
+  alignment,
+  onChange,
+}: {
+  symbols: Symbol[];
+  alignment: "binance-paribu" | "binance-btc";
+  onChange: (alignment: "binance-paribu" | "binance-btc") => void;
+}) => {
   const [open, setOpen] = useState(false);
   const [selectedCoins, setSelectedCoins] = useState<GridRowSelectionModel>([]);
   const [leverage, setLeverage] = useState<string>("3");
   const [marginType, setMarginType] = useState<"ISOLATED" | "CROSSED">(
     "ISOLATED"
   );
+
+  const handleChange = (
+    event: MouseEvent<HTMLElement>,
+    newAlignment: "binance-paribu" | "binance-btc"
+  ) => {
+    onChange(newAlignment);
+  };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -94,6 +111,21 @@ export const SettingsModal = ({ symbols }: { symbols: Symbol[] }) => {
       <IconButton onClick={handleOpen}>
         <SettingsIcon style={{ marginLeft: 5 }} />
       </IconButton>
+
+      <ToggleButtonGroup
+        color="primary"
+        value={alignment}
+        exclusive
+        onChange={handleChange}
+        aria-label="Platform"
+      >
+        <ToggleButton size="small" value="binance-paribu">
+          Binance/Paribu
+        </ToggleButton>
+        <ToggleButton size="small" value="binance-btc">
+          Binance/BTCTurk
+        </ToggleButton>
+      </ToggleButtonGroup>
       <Modal
         open={open}
         onClose={handleClose}

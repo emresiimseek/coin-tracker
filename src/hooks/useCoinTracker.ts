@@ -1,20 +1,28 @@
 import {
+  BTCCoin,
+  BTCTickerData,
   BinanceCoins,
   CombinedCoin,
   ParibuCoin,
   ParibuRoot,
 } from "@/types/Coin";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import CryptoES from "crypto-es";
+
 import { defaultArray } from "../utils/default-array";
-import { GridRowSelectionModel } from "@mui/x-data-grid";
+import {
+  GridColumnVisibilityModel,
+  GridRowSelectionModel,
+} from "@mui/x-data-grid";
 import { Symbol } from "@/types/ExchangeResponse";
 import axios from "axios";
-import { getExchange } from "../binance-api";
+import { getExchange, getTicker } from "../binance-api";
 import { QueryModel } from "@/types/QueryModel";
 
 const BINANCE_WEBSOCKET_URL = "wss://stream.binance.com/ws";
 const FS_BINANCE_WEBSOCKET_URL = "wss://fstream.binance.com/ws";
 const PARIBU_API_URL = "https://www.paribu.com/ticker";
+const BTC_API_URL = "https://api.btcturk.com/api/v2/ticker";
 
 export const useCoinTracker = () => {
   const [isMockData, setIsMockData] = useState<boolean>(false);
@@ -28,16 +36,23 @@ export const useCoinTracker = () => {
   const [symbols, setSymbol] = useState<Symbol[]>([]);
   const [loading, setLoading] = useState(false);
   const items = useMemo(() => symbols, [symbols]);
-  const [itemCount, setItemCount] = useState(0);
   const audioPlayer = useRef<HTMLAudioElement>(null);
   const [sellList, setSellList] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [btcCoins, setBtcCoins] = useState<BTCTickerData[]>([]);
+  const [alignment, setAlignment] = useState<"binance-paribu" | "binance-btc">(
+    "binance-paribu"
+  );
 
   function mergeArrays(
     binanceCoins: BinanceCoins[],
-    paribuCoins: ParibuCoin[]
+    paribuCoins?: ParibuCoin[],
+    btcCoins?: BTCTickerData[]
   ): CombinedCoin[] {
-    if (!Array.isArray(binanceCoins) || !Array.isArray(paribuCoins)) {
+    if (
+      (!Array.isArray(binanceCoins) && !Array.isArray(paribuCoins)) ||
+      (!Array.isArray(binanceCoins) && !Array.isArray(btcCoins))
+    ) {
       return [];
     }
 
@@ -46,29 +61,31 @@ export const useCoinTracker = () => {
     binanceCoins.forEach((binanceCoin) => {
       const d1 = binanceCoin.s.replace("USDT", "");
 
-      const paribuCoin = paribuCoins.find(
+      const paribuCoin = paribuCoins?.find(
         (item) => item.symbol.split("_")[0] === d1
       );
 
-      if (paribuCoin && usdttry?.c) {
-        const binancePrice = Number(binanceCoin.c);
-        const paribuLowestAsk = paribuCoin.lowestAsk;
-        const paribuHighestBid = paribuCoin.highestBid;
-        const isBuy =
-          ((paribuLowestAsk - binancePrice * Number(usdttry?.c)) * 100) /
-            paribuLowestAsk <
-          -0.1;
+      const btcCoin = btcCoins?.find((item) => item.PS == binanceCoin.s);
 
-        const buyDiff = Number(
-          ((paribuLowestAsk - binancePrice * Number(usdttry?.c)) /
-            paribuLowestAsk) *
-            100
-        );
-        const sellDiff = Number(
-          ((binancePrice * Number(usdttry?.c) - paribuHighestBid) /
-            (binancePrice * Number(usdttry?.c))) *
-            100
-        );
+      const condition = isParibu ? !!paribuCoin : !!btcCoin;
+
+      if (condition && usdttry?.c) {
+        const binancePrice = isParibu
+          ? Number(binanceCoin.c) * Number(usdttry.c)
+          : Number(binanceCoin.c);
+        const ask =
+          alignment === "binance-paribu"
+            ? paribuCoin?.lowestAsk ?? 0
+            : Number(btcCoin?.A) ?? 0;
+        const bid =
+          alignment === "binance-paribu"
+            ? paribuCoin?.highestBid ?? 0
+            : Number(btcCoin?.B) ?? 0;
+
+        const isBuy = ((ask - binancePrice) * 100) / ask < -0.1;
+
+        const buyDiff = Number(((ask - binancePrice) / ask) * 100);
+        const sellDiff = Number(((binancePrice - bid) / binancePrice) * 100);
 
         const symbol = symbols.find((s) => s.symbol === binanceCoin.s);
         const quantityPrecision = symbol?.quantityPrecision;
@@ -78,18 +95,20 @@ export const useCoinTracker = () => {
           priceBinance: +(binancePrice * Number(usdttry?.c)).toFixed(
             symbol?.pricePrecision
           ),
-          symbolParibu: paribuCoin.symbol,
-          paribuHighestBid,
-          paribuLowestAsk,
-          id: binanceCoin.s + paribuCoin.symbol,
+          symbolParibu: paribuCoin?.symbol,
+          paribuHighestBid: paribuCoin?.highestBid,
+          paribuLowestAsk: paribuCoin?.lowestAsk,
+          id: binanceCoin.s,
           binanceRealPrice: binancePrice,
           buyDiff,
           isBuy,
           sellDiff,
-          paribuDiff:
-            ((paribuHighestBid - paribuLowestAsk) / paribuHighestBid) * 100,
+          scissors: ((bid - ask) / bid) * 100,
           quantityPrecision,
           pricePrecision: symbol?.pricePrecision,
+          btcAsk: btcCoin?.A,
+          btcBid: btcCoin?.B,
+          btcSymbol: btcCoin?.PS,
         };
 
         mergedArray.push(data);
@@ -128,7 +147,7 @@ export const useCoinTracker = () => {
                 (existingObj?.fixedParibuLowestAsk ?? 0);
 
             const paribuProfit =
-              existingObj.paribuHighestBid * paribuCount -
+              Number(existingObj.paribuHighestBid) * paribuCount -
               (existingObj?.fixedParibuLowestAsk ?? 0) * paribuCount;
 
             const binanceProfit =
@@ -152,12 +171,6 @@ export const useCoinTracker = () => {
           }
         } else {
           newDataCopy.push(newObj);
-          const itemCount = Number(localStorage.getItem("itemCount")) || 0;
-          if (combinedArray.length > itemCount)
-            localStorage.setItem(
-              "itemCount",
-              JSON.stringify(combinedArray.length)
-            );
         }
       });
 
@@ -168,20 +181,25 @@ export const useCoinTracker = () => {
         ...newDataCopy.filter((x) => !x.isBuy && !selectedCoinsSet.has(x.id)),
       ];
 
-      sessionStorage.setItem("coins", JSON.stringify(allCoins));
+      isParibu
+        ? sessionStorage.setItem("paribuCoins", JSON.stringify(allCoins))
+        : sessionStorage.setItem("btcCoins", JSON.stringify(allCoins));
 
       return allCoins;
     });
   };
 
   useEffect(() => {
-    if (!paribusCoins.length || !binanceCoins.length || !usdttry) return;
-    const list = mergeArrays(binanceCoins, paribusCoins).filter(
+    if (!binanceCoins.length || !usdttry) return;
+
+    if (!paribusCoins.length && !btcCoins?.length) return;
+
+    const list = mergeArrays(binanceCoins, paribusCoins, btcCoins).filter(
       (x) => x.buyDiff > 0 || x.buyDiff < -0.1
     );
 
     updatePrice(list);
-  }, [usdttry, paribusCoins, binanceCoins]);
+  }, [usdttry, paribusCoins, binanceCoins, btcCoins]);
 
   const getParibuPrice = async () => {
     if (isMockData) return;
@@ -233,13 +251,45 @@ export const useCoinTracker = () => {
     return confirmationMessage;
   };
 
-  // mounted hook
-  useEffect(() => {
-    const count = Number(localStorage.getItem("itemCount")) || 0;
-    setItemCount(count);
+  function getBTCTicker() {
+    const url = "wss://ws-feed-pro.btcturk.com/";
+    const connection = new WebSocket(url);
+
+    const publicKey = "634e4535-5d7a-41a7-9676-5d7b79e7fab0";
+    const privateKey = "voUO/rYdhEiHILyl/FJ+5NNTv5CTXGWG";
+
+    const nonce = 3000;
+    const stamp = new Date().getTime();
+
+    const baseString = `${publicKey}${nonce}`;
+    const signature = CryptoES.HmacSHA256(baseString, privateKey).toString(
+      CryptoES.enc.Base64
+    );
+
+    const message = `[151,{"type":151,"channel":"ticker","event":"all","join":true}]`;
+
+    connection.onopen = () => {
+      connection.send(message);
+    };
+
+    connection.onerror = (error) => {
+      console.log(`WebSocket error: ${error}`);
+    };
+
+    connection.onmessage = (e) => {
+      const btcData = JSON.parse(e.data);
+      const items = btcData.at(btcData.length - 1).items;
+      setBtcCoins(items);
+    };
+    return connection;
+  }
+
+  function setStroageData() {
     getExchangeData();
 
-    const coins = sessionStorage.getItem("coins");
+    const coins = isParibu
+      ? sessionStorage.getItem("paribuCoins")
+      : sessionStorage.getItem("btcCoins");
 
     if (coins) {
       setSelectedCoins([]);
@@ -260,10 +310,21 @@ export const useCoinTracker = () => {
 
       if (coinsData.length) setCombinedArray(coinsData);
     }
+  }
+
+  const mounted = () => {
+    setStroageData();
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    const interval = setInterval(getParibuPrice, 1000);
+    let interval: any;
+    let connection: any;
+
+    if (alignment === "binance-paribu") {
+      interval = setInterval(getParibuPrice, 1000);
+    } else {
+      connection = getBTCTicker();
+    }
 
     const binanceSocket = new WebSocket(BINANCE_WEBSOCKET_URL);
     binanceSocket.onopen = () => {
@@ -304,9 +365,22 @@ export const useCoinTracker = () => {
     return () => {
       binanceFSSocket.close();
       binanceSocket.close();
-      clearInterval(interval);
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      connection.close();
+      clearInterval(interval);
     };
+  };
+
+  const clearStorage = async () => {
+    setCombinedArray([]);
+    await sessionStorage.setItem("paribuCoins", JSON.stringify([]));
+    await sessionStorage.setItem("btcCoins", JSON.stringify([]));
+  };
+
+  // mounted hook
+  useEffect(() => {
+    clearStorage();
+    mounted();
   }, []);
 
   function createQueryString(params: QueryModel) {
@@ -322,7 +396,10 @@ export const useCoinTracker = () => {
   }
 
   const handleSelect = useCallback(
-    (newRowSelectionModel: GridRowSelectionModel, type: "B" | "P" | "BP") => {
+    (
+      newRowSelectionModel: GridRowSelectionModel,
+      type: "B" | "P" | "BTC" | "BP"
+    ) => {
       if (newRowSelectionModel.length === combinedArray.length) {
         setDialogOpen(true);
         return;
@@ -338,6 +415,11 @@ export const useCoinTracker = () => {
             const setBinance = () => {
               updatedCoin.fixedBinancePrice = data.priceBinance;
               updatedCoin.fixedBinanceRealPrice = data.binanceRealPrice;
+            };
+
+            const setBtc = () => {
+              updatedCoin.fixedBtcBid = Number(data.btcBid);
+              updatedCoin.fixedBtcAsk = Number(data.btcAsk);
             };
 
             const setParibu = () => {
@@ -361,12 +443,16 @@ export const useCoinTracker = () => {
               updatedCoin.paribuTotal = null;
               updatedCoin.binanceTotal = null;
               updatedCoin.fixedBinanceRealPrice = null;
+              updatedCoin.fixedBtcAsk = null;
+              updatedCoin.fixedBtcBid = null;
             } else {
               if (type === "P") setParibu();
               else if (type === "B") setBinance();
+              else if (type === "BTC") setBinance();
               else if (type === "BP") {
                 setBinance();
                 setParibu();
+                setBtc();
               }
             }
 
@@ -380,6 +466,64 @@ export const useCoinTracker = () => {
     [combinedArray, selectedCoins, updatePrice]
   );
 
+  const isParibu: boolean = useMemo(
+    () => alignment === "binance-paribu",
+    [alignment]
+  );
+
+  useEffect(() => {
+    clearStorage();
+    mounted();
+  }, [alignment]);
+
+  const columnVisibilityModel: GridColumnVisibilityModel = useMemo(() => {
+    const paribuColumns = [
+      "paribuHighestBid",
+      "paribuLowestAsk",
+      "fixedParibuLowestAsk",
+      "fixedParibuHighestBid",
+      "paribuTotal",
+      "paribuAmount",
+      "paribuBuy",
+      "paribuSell",
+      "priceBinance",
+    ].map((i) => ({ [i]: false }));
+
+    const btcColumns = [
+      "btcBid",
+      "btcAsk",
+      "btcTotal",
+      "btcUnit",
+      "btcBuy",
+      "btcSell",
+      "fixedBtcBid",
+      "fixedBtcAsk",
+    ].map((i) => ({
+      [i]: false,
+    }));
+
+    const paribuColumnsObj = paribuColumns.reduce(
+      (acc, curr, index) => ({
+        ...acc,
+        [Object.keys(curr)[0].toString()]: Object.values(curr)[0],
+      }),
+      {}
+    );
+    const btcColumnsObj = btcColumns.reduce(
+      (acc, curr, index) => ({
+        ...acc,
+        [Object.keys(curr)[0].toString()]: Object.values(curr)[0],
+      }),
+      {}
+    );
+
+    const all = {
+      ...(isParibu ? btcColumnsObj : paribuColumnsObj),
+    };
+
+    return all;
+  }, [alignment]);
+
   return {
     updatePrice,
     createQueryString,
@@ -390,11 +534,14 @@ export const useCoinTracker = () => {
     combinedArray,
     loading,
     audioPlayer,
-    itemCount,
     sellList,
     setSellList,
     dialogOpen,
     setDialogOpen,
     setBinanceCoins,
+    alignment,
+    setAlignment,
+    isParibu,
+    columnVisibilityModel,
   };
 };

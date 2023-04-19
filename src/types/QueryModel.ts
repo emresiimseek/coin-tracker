@@ -1,6 +1,6 @@
 export interface QueryModel {
-  paribuBuyPrice: string;
-  paribuSellPrice: string;
+  paribuBuyPrice?: string;
+  paribuSellPrice?: string;
   symbolParibu: string;
   amount: string;
   type: "sell" | "buy";
