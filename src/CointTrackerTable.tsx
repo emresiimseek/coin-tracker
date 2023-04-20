@@ -100,7 +100,7 @@ function CoinTracker() {
     },
     {
       field: "btcTotal",
-      headerName: "Toplam ($)",
+      headerName: "Toplam(₺)",
       minWidth: 80,
       description: "BTC Toplam",
       flex: 1,
@@ -114,7 +114,7 @@ function CoinTracker() {
             size="small"
             autoComplete="off"
             value={params.row.btcTotal || ""}
-            placeholder="$"
+            placeholder="₺"
             InputProps={{
               inputComponent: NumericFormatCustom as any,
               style: { paddingRight: 7 },
@@ -510,8 +510,8 @@ function CoinTracker() {
       },
     },
     {
-      field: "benefit",
-      headerName: "Kar",
+      field: "benefitParibu",
+      headerName: "P. Kar",
       type: "number",
       minWidth: 80,
       description: "Kar",
@@ -553,9 +553,59 @@ function CoinTracker() {
 
         const lastBenefit = Number(params.row.benefit);
 
-        return isNaN(lastBenefit) || lastBenefit === 0 ? "" : lastBenefit;
+        const result = paribuProfit + binanceProfit - totalCommisson;
+
+        return isNaN(lastBenefit) || lastBenefit === 0 ? "" : result;
       },
     },
+    {
+      field: "benefitBTC",
+      headerName: "BTC Kar",
+      type: "number",
+      minWidth: 80,
+      description: "Kar",
+      headerAlign: "center",
+      flex: 0.6,
+      valueGetter: (params: Params) => {
+        const commissionBTCRate = 1 / 1000;
+
+        const count = params.row.btcUnit
+          ? params.row.btcUnit
+          : Number(params.row.btcTotal) / Number(params.row.fixedBtcAsk);
+
+        const btcProfit =
+          Number(params.row.btcBid) * count -
+          (params.row?.fixedBtcAsk ?? 0) * count;
+
+        const commissionBTC =
+          commissionBTCRate * Number(params.row.btcTotal) +
+          commissionBTCRate * (Number(params.row.btcTotal) + btcProfit);
+
+        const commissionB = 0.2 / 1000;
+
+        const binanceProfit =
+          Number(params.row.fixedBinancePrice) *
+            +Number(params.row.binanceUnit).toFixed(
+              params.row.quantityPrecision
+            ) -
+          params.row.priceBinance *
+            +Number(params.row.binanceUnit).toFixed(
+              params.row.quantityPrecision
+            );
+
+        const commissionBinance =
+          commissionB * Number(params.row.binanceTotal) +
+          commissionB * (Number(params.row.binanceTotal) + binanceProfit);
+
+        const totalCommisson = commissionBinance + commissionBTC;
+
+        const lastBenefit = Number(params.row.benefitBTC);
+        const result = btcProfit + binanceProfit - totalCommisson;
+
+        return isNaN(lastBenefit) || lastBenefit === 0 ? "" : result;
+      },
+    },
+
     {
       field: "scissors",
       headerName: "Makas",
@@ -564,8 +614,6 @@ function CoinTracker() {
       type: "number",
       flex: 0.6,
       description: "Makas",
-      renderHeader: (params: GridColumnHeaderParams) =>
-        CustomHeader(isParibu ? "p" : "bt", params),
     },
     {
       field: "buyDiff",
@@ -927,10 +975,16 @@ function CoinTracker() {
           handleSelect(rowSelectionModel, "BP")
         }
         getRowClassName={(value) => {
-          const { isBuy, sellDiff, buyDiff, id, benefit } = value.row;
+          const { isBuy, sellDiff, buyDiff, id, benefit, benefitBTC } =
+            value.row;
 
           const isSell =
-            Math.sign(sellDiff) === -1 && Math.sign(buyDiff) === 1 && benefit;
+            (Math.sign(sellDiff) === -1 &&
+              Math.sign(buyDiff) === 1 &&
+              benefit) ||
+            (Math.sign(sellDiff) === -1 &&
+              Math.sign(buyDiff) === 1 &&
+              benefitBTC);
 
           let tradeType = "";
 

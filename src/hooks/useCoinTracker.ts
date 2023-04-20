@@ -65,14 +65,12 @@ export const useCoinTracker = () => {
         (item) => item.symbol.split("_")[0] === d1
       );
 
-      const btcCoin = btcCoins?.find((item) => item.PS == binanceCoin.s);
+      const btcCoin = btcCoins?.find((item) => item.NS == d1);
 
       const condition = isParibu ? !!paribuCoin : !!btcCoin;
 
       if (condition && usdttry?.c) {
-        const binancePrice = isParibu
-          ? Number(binanceCoin.c) * Number(usdttry.c)
-          : Number(binanceCoin.c);
+        const binancePrice = Number(binanceCoin.c) * Number(usdttry.c);
         const ask =
           alignment === "binance-paribu"
             ? paribuCoin?.lowestAsk ?? 0
@@ -92,14 +90,12 @@ export const useCoinTracker = () => {
 
         const data: CombinedCoin = {
           symbolBinance: binanceCoin.s,
-          priceBinance: +(binancePrice * Number(usdttry?.c)).toFixed(
-            symbol?.pricePrecision
-          ),
+          priceBinance: +binancePrice.toFixed(symbol?.pricePrecision),
           symbolParibu: paribuCoin?.symbol,
           paribuHighestBid: paribuCoin?.highestBid,
           paribuLowestAsk: paribuCoin?.lowestAsk,
           id: binanceCoin.s,
-          binanceRealPrice: binancePrice,
+          binanceRealPrice: Number(binanceCoin.c),
           buyDiff,
           isBuy,
           sellDiff,
@@ -140,6 +136,8 @@ export const useCoinTracker = () => {
 
           if (!existingObj.fixedBinancePrice) {
             existingObj.benefit = null;
+          } else if (!existingObj.fixedBtcAsk || !existingObj.fixedBtcBid) {
+            existingObj.benefitBTC = null;
           } else {
             const paribuCount = existingObj.paribuUnit
               ? +existingObj.paribuUnit
@@ -168,6 +166,26 @@ export const useCoinTracker = () => {
               !existingObj.paribuUnit
                 ? null
                 : profit;
+
+            // -----------------
+
+            const btcCount = existingObj.btcUnit
+              ? +existingObj.btcUnit
+              : Number(existingObj?.btcTotal ?? 0) /
+                (existingObj?.fixedParibuLowestAsk ?? 0);
+
+            const btcProfit =
+              Number(existingObj.paribuHighestBid) * btcCount -
+              (existingObj?.fixedParibuLowestAsk ?? 0) * btcCount;
+
+            const profitBTC = btcProfit + binanceProfit;
+
+            existingObj.benefitBTC =
+              Number.isNaN(profitBTC) ||
+              !existingObj.binanceUnit ||
+              !existingObj.btcUnit
+                ? null
+                : profitBTC;
           }
         } else {
           newDataCopy.push(newObj);
@@ -486,7 +504,7 @@ export const useCoinTracker = () => {
       "paribuAmount",
       "paribuBuy",
       "paribuSell",
-      "priceBinance",
+      "benefitParibu",
     ].map((i) => ({ [i]: false }));
 
     const btcColumns = [
@@ -498,6 +516,7 @@ export const useCoinTracker = () => {
       "btcSell",
       "fixedBtcBid",
       "fixedBtcAsk",
+      "benefitBTC",
     ].map((i) => ({
       [i]: false,
     }));

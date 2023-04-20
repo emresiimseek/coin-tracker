@@ -69,6 +69,7 @@ export interface CombinedCoin {
   id: string;
   buyDiff: number;
   benefit?: number | null;
+  benefitBTC?: number | null;
   scissors: number;
   binanceRealPrice: number;
   quantityPrecision?: number;
