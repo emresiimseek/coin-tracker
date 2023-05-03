@@ -105,6 +105,8 @@ export const useCoinTracker = () => {
           btcAsk: btcCoin?.A,
           btcBid: btcCoin?.B,
           btcSymbol: btcCoin?.PS,
+          btcBenefits: [],
+          paribuBenefits: [],
         };
 
         mergedArray.push(data);
@@ -127,7 +129,9 @@ export const useCoinTracker = () => {
           const existingObj = newDataCopy[existingIndex];
 
           Object.entries(newObj).forEach(([key, value]) => {
-            if (value !== undefined) {
+            if (Array.isArray(existingObj[key])) {
+              existingObj[key] = [...existingObj[key], ...value];
+            } else if (value !== undefined) {
               existingObj[key] = value;
             } else if (value !== null) {
               existingObj[key] = null;
@@ -136,8 +140,6 @@ export const useCoinTracker = () => {
 
           if (!existingObj.fixedBinancePrice) {
             existingObj.benefit = null;
-          } else if (!existingObj.fixedBtcAsk || !existingObj.fixedBtcBid) {
-            existingObj.benefitBTC = null;
           } else {
             const paribuCount = existingObj.paribuUnit
               ? +existingObj.paribuUnit

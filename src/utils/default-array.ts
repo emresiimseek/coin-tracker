@@ -16,6 +16,8 @@ export const defaultArray = (): CombinedCoin[] => [
     scissors: -0.2844372206420166,
     benefit: null,
     isSell: false,
+    btcBenefits: [],
+    paribuBenefits: [],
   },
   // {
   //   symbolBinance: "BANDUSDT",

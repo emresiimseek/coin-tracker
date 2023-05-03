@@ -94,6 +94,9 @@ export interface CombinedCoin {
   fixedBtcBid?: number | null;
   btcTotal?: number | null;
 
+  btcBenefits: { value: number; time: string }[];
+  paribuBenefits: { value: number; time: string }[];
+
   [key: string]: any;
 }
 

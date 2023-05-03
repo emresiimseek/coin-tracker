@@ -27,6 +27,7 @@ import React, { forwardRef, useMemo } from "react";
 import ClearIcon from "@mui/icons-material/Clear";
 import { toast } from "react-toastify";
 import YesNoDialog from "./YesNoDialog";
+import ChartModal from "./ChartModal";
 
 function CoinTracker() {
   const {
@@ -112,6 +113,17 @@ function CoinTracker() {
         return (
           <TextField
             size="small"
+            onDoubleClick={() => {
+              const data =
+                params.row.btcTotal?.toString().replace(".", ",") ?? "";
+              toast(data, {
+                autoClose: 500,
+                type: "info",
+                position: "bottom-center",
+              });
+
+              navigator.clipboard.writeText(data);
+            }}
             autoComplete="off"
             value={params.row.btcTotal || ""}
             placeholder="₺"
@@ -158,7 +170,7 @@ function CoinTracker() {
     {
       field: "btcUnit",
       headerName: "Miktar",
-      minWidth: 80,
+      minWidth: 100,
       description: "Miktar",
       headerAlign: "center",
       flex: 1,
@@ -169,11 +181,22 @@ function CoinTracker() {
           <TextField
             value={params.row.btcUnit || ""}
             autoComplete="off"
+            onDoubleClick={() => {
+              const data =
+                params.row.btcUnit?.toString().replace(".", ",") ?? "";
+              toast(data, {
+                autoClose: 500,
+                type: "info",
+                position: "bottom-center",
+              });
+
+              navigator.clipboard.writeText(data);
+            }}
             size="small"
             style={{ backgroundColor: "white", borderRadius: 5 }}
             InputProps={{
               inputComponent: NumericFormatCustom as any,
-              style: { paddingRight: 7 },
+              style: { paddingRight: 2 },
               endAdornment: (
                 <InputAdornment position="end" sx={{ marginLeft: 0 }}>
                   <IconButton
@@ -271,6 +294,17 @@ function CoinTracker() {
           <TextField
             size="small"
             autoComplete="off"
+            onDoubleClick={() => {
+              const data =
+                params.row.paribuTotal?.toString().replace(".", ",") ?? "";
+              toast(data, {
+                autoClose: 500,
+                type: "info",
+                position: "bottom-center",
+              });
+
+              navigator.clipboard.writeText(data);
+            }}
             value={params.row.paribuTotal || ""}
             placeholder="₺"
             InputProps={{
@@ -331,6 +365,17 @@ function CoinTracker() {
             value={params.row.paribuUnit || ""}
             autoComplete="off"
             size="small"
+            onDoubleClick={() => {
+              const data =
+                params.row.paribuUnit?.toString().replace(".", ",") ?? "";
+              toast(data, {
+                autoClose: 500,
+                type: "info",
+                position: "bottom-center",
+              });
+
+              navigator.clipboard.writeText(data);
+            }}
             style={{ backgroundColor: "white", borderRadius: 5 }}
             InputProps={{
               inputComponent: NumericFormatCustom as any,
@@ -426,6 +471,17 @@ function CoinTracker() {
             value={params.row.binanceUnit || ""}
             autoComplete="off"
             size="small"
+            onDoubleClick={() => {
+              const data =
+                params.row.binanceUnit?.toString().replace(".", ",") ?? "";
+              toast(data, {
+                autoClose: 500,
+                type: "info",
+                position: "bottom-center",
+              });
+
+              navigator.clipboard.writeText(data);
+            }}
             style={{
               backgroundColor: "white",
               borderRadius: 5,
@@ -555,7 +611,14 @@ function CoinTracker() {
 
         const result = paribuProfit + binanceProfit - totalCommisson;
 
-        return isNaN(lastBenefit) || lastBenefit === 0 ? "" : result;
+        if (isNaN(lastBenefit) || lastBenefit === 0) return "";
+
+        params.row.paribuBenefits?.push({
+          value: result,
+          time: `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`,
+        });
+
+        return result;
       },
     },
     {
@@ -602,7 +665,14 @@ function CoinTracker() {
         const lastBenefit = Number(params.row.benefitBTC);
         const result = btcProfit + binanceProfit - totalCommisson;
 
-        return isNaN(lastBenefit) || lastBenefit === 0 ? "" : result;
+        if (isNaN(lastBenefit) || lastBenefit === 0) return "";
+
+        params.row.btcBenefits?.push({
+          value: result,
+          time: `${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`,
+        });
+
+        return result;
       },
     },
 
@@ -915,6 +985,22 @@ function CoinTracker() {
         );
       },
     },
+    {
+      field: "chart",
+      headerName: "Grafik",
+      type: "actions",
+      headerAlign: "center",
+      renderCell: (params: Params) => {
+        return (
+          <ChartModal
+            datas={
+              isParibu ? params.row.paribuBenefits : params.row.btcBenefits
+            }
+            symbol={params.row.symbolBinance ?? ""}
+          />
+        );
+      },
+    },
   ];
 
   const Footer = useMemo(
@@ -960,6 +1046,7 @@ function CoinTracker() {
           loadingOverlay: LinearProgress,
           footer: Footer,
         }}
+        loading={!combinedArray.length}
         rows={combinedArray}
         disableRowSelectionOnClick
         columns={columns}
